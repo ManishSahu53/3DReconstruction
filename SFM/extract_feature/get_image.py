@@ -1,24 +1,54 @@
+""" Extracting list of images from folder, get_image.py"""
+
 def list_image(path,path_logging):
-    import time
     import logging
+    reload(logging)
+    import time
     import os
+    
+    # Setup logging of function 
+    formatter = logging.Formatter('%(asctime)s %(levelname)s %(message)s')
+    def setup_logger(name, log_file, level=logging.DEBUG):
+        """Function setup as many loggers as you want"""
+    
+        handler = logging.FileHandler(log_file)        
+        handler.setFormatter(formatter)
+    
+        logger = logging.getLogger(name)
+        logger.setLevel(level)
+        logger.addHandler(handler)
+    
+        return logger
+        
+    # Logging setup
+    logger = setup_logger('get_image', path_logging + 'get_image.log')
+    logger.info('This will record message from get_image function')
+
     # Starting recording time
     start_time = time.time();
     
     list_image = []; # Getting list of images
-    # Logging starts
-    logging.basicConfig(format='%(asctime)s %(message)s',filename= path_logging + '/list_image.log');#,level=logging.info);
+
+    # Searching of image
     for root,dirs,files in os.walk(path):
         if len(files) == 0:
-            logging.fatal('No images found in "%s" directory'%(path))
+            logger.fatal('No images found in "%s" directory'%(path))
             break;
             
         for file_name in files:
             if file_name.endswith(('.jpg', '.jpeg', '.JPG','.Jpg')):
                 list_image.append((path + file_name));
-                logging.info(file_name + ' found')
+                logger.info(file_name + ' found')
     
-    logging.info('Total images found is: %s'%(len(list_image)))
+    logger.info('Total images found is: %s'%(len(list_image)))
     end_time = time.time();
-    logging.info('Total time taken is: %s sec'%(str(end_time-start_time)))
+    logger.info('Total time taken is: %s sec'%(str(round(end_time-start_time,1))))
+    
+    # returning list of images present in the folder
     return list_image
+
+def main(path,path_logging):
+    list_image(path,path_logging);
+    
+if __name__ == '__main__':
+    main()
