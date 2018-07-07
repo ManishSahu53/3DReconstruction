@@ -67,9 +67,8 @@ import json
 parser = argparse.ArgumentParser(description='See description below to see all available options')
 
 parser.add_argument('-i','--input',
-                    help='Input directory containing images. [Default] current directory', 
-                    default= './',
-                    required=False)
+                    help='Input directory containing images. [Default] current directory',
+                    required=True)
                     
 parser.add_argument('-o','--output',
                     help='Output directory where all the output will be stored. [Default] output folder in current directory',

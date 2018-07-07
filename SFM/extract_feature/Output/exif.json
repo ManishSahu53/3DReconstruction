@@ -1,0 +1,14 @@
+{
+    "Exif": [
+        [
+            "Image",
+            "Lat",
+            "Long",
+            "Elevation",
+            "Focal length in mm",
+            "Width(px)",
+            "Height(px)",
+            "Capture Time"
+        ]
+    ]
+}

@@ -1079,3 +1079,15 @@
 2018-07-07 13:03:32,897 INFO DJI_0022.JPG found
 2018-07-07 13:03:32,897 INFO Total images found is: 20
 2018-07-07 13:03:32,897 INFO Total time taken is: 0.0 sec
+2018-07-07 13:25:09,920 INFO This will record message from get_image function
+2018-07-07 13:25:09,921 CRITICAL No images found in "./" directory
+2018-07-07 13:25:09,921 INFO Total images found is: 0
+2018-07-07 13:25:09,921 INFO Total time taken is: 0.0 sec
+2018-07-07 18:13:29,285 INFO This will record message from get_image function
+2018-07-07 18:13:29,285 CRITICAL No images found in "./" directory
+2018-07-07 18:13:29,285 INFO Total images found is: 0
+2018-07-07 18:13:29,285 INFO Total time taken is: 0.0 sec
+2018-07-07 18:26:51,877 INFO This will record message from get_image function
+2018-07-07 18:26:51,878 CRITICAL No images found in "./" directory
+2018-07-07 18:26:51,878 INFO Total images found is: 0
+2018-07-07 18:26:51,878 INFO Total time taken is: 0.0 sec

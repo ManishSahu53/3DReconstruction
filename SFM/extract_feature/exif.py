@@ -39,21 +39,20 @@ import argparse
 parser = argparse.ArgumentParser(description='See description below to see all available options')
 
 parser.add_argument('-i','--input',
-                    help='Input directory containing images. [Default] current directory', 
-                    default= './',
-                    required=False)
+                    help='Input directory containing images. [Default] current directory',
+                    required=True)
                     
 parser.add_argument('-o','--output',
                     help='Output directory where json file will be stored. [Default] output folder in current directory',
-                    default = './Output/',
+                    default = './output/',
                     required=False)
                     
-args = parser.parse_args()                    
-                    
+args = parser.parse_args()   
+    
 path_image = args.input;
 file_json = args.output;
 
-path_logging = '/home/indshine-2/Downloads/Dimension/Dimension/logging/'
+path_logging = './logging/'
 #path_image = '/home/indshine-2/Downloads/Dimension/Data/test/'
 #file_json = '/home/indshine-2/Downloads/Dimension/output/SFM/exif/exif.json'
 
@@ -63,6 +62,7 @@ path_logging = '/home/indshine-2/Downloads/Dimension/Dimension/logging/'
                     
 # Checking output directories
 checkdir(file_json);
+checkdir(path_logging);
 
 # Fatal error of image directory doesn't exist
 if not os.path.exists(os.path.dirname(path_image)):
