@@ -78,15 +78,30 @@ following methods
 
 ## Running the tests
 
-Explain how to run the automated tests for this system
+1. To run test dataset, go to **test_dataset**. There are 20 images available.
+First step would be to get exif information from those images.
+Let output folder be results directory and input be test_dataset.
 
-### Break down into end to end tests
 
-Explain what these tests test and why
+Type ```python exif.py -i test_dataset -o output ```
 
-```
-Give an example
-```
+
+To get help type ```python exif.py -h``` to get information about how to run it.
+
+
+This will extract exif information from images and output **exif.json** file.
+This file contains exif information like *Latitude, Longitude, Elevation, Time of photo capture,
+focal length, height and width* of image in pixels.
+
+2. Next step would be to extract features from images. In this example we will 
+extract feature using SIFT algorithm. So *m* would be 1. 
+
+
+``` python extract_feature.py -i test_dataaset -o output -m 1```
+
+There are 5 methods available so *m* can vary from 1-5.
+Output folder with the name of method(here sift) will be created. **extract_feature.json** 
+will be created inside logging folder to get summary of the process.
 
 ### And coding style tests
 
@@ -116,7 +131,7 @@ We use [SemVer](http://semver.org/) for versioning. For the versions available, 
 
 ## Authors
 
-* **Billie Thompson** - *Initial work* - [PurpleBooth](https://github.com/PurpleBooth)
+* **Manish Sahu** - *Initial work* - [PurpleBooth](https://github.com/PurpleBooth)
 
 See also the list of [contributors](https://github.com/your/project/contributors) who participated in this project.
 

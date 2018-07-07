@@ -101,8 +101,8 @@ if method > 5 or method <1:
     sys.exit('Invalid method selected. Only %s methods are available. See help to know how to use them '%(str(5)))
 
 # Path locations
-path_logging = '/home/indshine-2/Downloads/Dimension/Dimension/logging/';
-report_logging = '/home/indshine-2/Downloads/Dimension/Dimension/report/';
+path_logging = './logging/';
+#report_logging = './report/';
 #output_location = '/home/indshine-2/Downloads/Dimension/output/SFM/extract_feature/';
 #path_image = '/home/indshine-2/Downloads/Dimension/Data/test/'
 
@@ -117,7 +117,7 @@ logname= path_logging + '/extract_feature'
 
 # Checking if path  exists, otherwise will be created
 checkdir(path_logging);
-checkdir(report_logging);
+#checkdir(report_logging);
 
 # Parameters
 num_feature = 40000;
@@ -197,7 +197,7 @@ def extract_feature(image):
                 "Time" : _time_taken,
                 "Method" : method_}
                 
-        tojson(feature,report_logging + os.path.splitext(os.path.basename(image))[0] + '.json')
+        tojson(feature,path_logging + os.path.splitext(os.path.basename(image))[0] + '.json')
         
         print('finished processing %s and took %s sec per thread'
         %(os.path.splitext(os.path.basename(image))[0],_time_taken) )
@@ -225,7 +225,7 @@ def extract_feature(image):
 def pool_handler():
     p = Pool(processes=threads,maxtasksperchild=1);
     features = list(p.imap_unordered(extract_feature, list_image))
-    tojson(features,report_logging + 'extract_feature.json')
+    tojson(features,path_logging + 'extract_feature.json')
     p.close()
 
     
