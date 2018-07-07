@@ -12,48 +12,69 @@ how to deploy the project on a live system.
 ### Prerequisites
 
 *Dimension* depends on Python 2.7 libraries. List of libraries can be found below:
-1.  [OpenCv](https://opencv.org/) Opencv is open source computer vision library.
+1.  [OpenCV](https://opencv.org/) Opencv is open source computer vision library.
 To install opencv type ```pip install opencv-python```. This will install latest
 opencv availabe. Version 3.4.1 was used to develop dimension. To download specific
 version of openCV type ```pip install opencv-python==3.4.1 ```
 
-2.  [numpy](http://www.numpy.org/) Numpy is to store images as array of numbers.
+2.  [Numpy](http://www.numpy.org/) Numpy is to store images as array of numbers.
 To install numpy type ```pip install numpy```
 
 3.  [cPickle](https://docs.python.org/2/library/pickle.html)The pickle module 
 implements a fundamental, but powerful algorithm for serializing and 
 de-serializing a Python object structure. This is inbuilt function in python.
 
-4.  [multiprocessing](https://docs.python.org/2/library/multiprocessing.html) 
+4.  [Multiprocessing](https://docs.python.org/2/library/multiprocessing.html) 
 This is used to do multicore processing. To install this type
 ```pip install multiprocessing```
 
-5. [argparse](https://docs.python.org/2.7/library/argparse.html)
+5. [Argparse](https://docs.python.org/2.7/library/argparse.html)
 Argparse is used to parse user input data. Install this type 
 ```pip install argparse```
 
-
-```
-Give examples
-```
-
 ### Installing
 
-A step by step series of examples that tell you how to get a development env running
+To install Dimension on your PC, simply clone this repository and 
+install dependencies mentoned above. Python 2.7 is used to develop so using python3 
+can cause some error.
 
-Say what the step will be
+### Functions available
+There are three function avaliable.
 
-```
-Give the example
-```
+1. **get_image.py**
 
-And repeat
+This function is used to get list of images present in the given folder. This is 
+used along with other function. To import get_image function simply type 
 
-```
-until finished
-```
+```import get_image```
 
-End with an example of getting some data out of the system or using it for a little demo
+This will load the module. It further consists list_image
+function. list_image will take image directory and logging directory as inputs.
+It returns list of images present inside image directory.
+
+2. **exif.py**
+
+Exif function is used to extract exif information from the images. Two inputs are 
+required - **Input directory** containing images and output directory of results.
+In case no output directory is given then inside current directory output folder
+will be created automatically and all the results will be save there. By default
+a logging folder will be created inside current directory, this will keep the logs 
+of this function.
+
+3. **extract_feature.py**
+
+Extract features function is used to extract features from images. There are 3 
+parameters available. Input directory, Output directory , 
+Method to use for feature extraction. Input directory will contain images,
+output folder will contain extracted features. 
+
+There are 5 **Methods** available to extract features. Type 1-5 digits to use 
+following methods
+1. [SIFT](http://opencv-python-tutroals.readthedocs.io/en/latest/py_tutorials/py_feature2d/py_sift_intro/py_sift_intro.html)
+2. [SURF](https://docs.opencv.org/3.4/df/dd2/tutorial_py_surf_intro.html)
+3. [ORB](http://opencv-python-tutroals.readthedocs.io/en/latest/py_tutorials/py_feature2d/py_orb/py_orb.html)
+4. [BRISK](https://docs.opencv.org/3.0-beta/modules/features2d/doc/feature_detection_and_description.html)
+5. [AKAZE](https://docs.opencv.org/3.0-beta/modules/features2d/doc/feature_detection_and_description.html)
 
 ## Running the tests
 
