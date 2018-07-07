@@ -97,6 +97,10 @@ output_path = args.output;
 checkdir(output_path);
 method = args.method;
 
+# Check if method > 5
+if method > 5 or method <1:
+    sys.exit('Invalid method selected. Only %s methods are available. See help to know how to use them '%(str(5)))
+
 # Path locations
 path_logging = '/home/indshine-2/Downloads/Dimension/Dimension/logging/';
 report_logging = '/home/indshine-2/Downloads/Dimension/Dimension/report/';
@@ -122,7 +126,7 @@ count_feature = [];
 append_image = [];
 append_time = [];
 append_method = [];
-
+threads = 6;
 
 # Getting list of images present in given folder.
 list_image = get_image.list_image(path_image,path_logging);
@@ -146,33 +150,33 @@ def extract_feature(image):
         _start_time = time.time();
         
         if method == 1: # Sift 
-            method_ = 'sift/'
+            method_ = 'sift'
             sift_ = cv2.xfeatures2d_SIFT.create(nfeatures = num_feature); # Predefining number of features
             kp, des = sift_.detectAndCompute(_gray,None);
             
         if method ==2: # Surf
-            method_ = 'surf/'
+            method_ = 'surf'
             surf_ = cv2.xfeatures2d.SURF_create();
             kp, des = surf_.detectAndCompute(_gray,None);
             
         if method ==3: # ORB
-            method_ = 'orb/'
+            method_ = 'orb'
             orb_ = cv2.ORB_create()#nfeatures = num_feature) # Predefining number of features
             kp,des = orb_.detectAndCompute(_gray,None);    
             
         if method == 4: # Brisk
-            method_ = 'brisk/'
+            method_ = 'brisk'
             brisk_ = cv2.BRISK_create();
             kp, des = brisk_.detectAndCompute(_gray,None);
             
         if method == 5: # AKAZE
-            method_ = 'akaze/'
+            method_ = 'akaze'
             akaze_ = cv2.AKAZE_create();
             kp, des = akaze_.detectAndCompute(_gray,None);
         
 #           Store and Retrieve keypoint features
         temp = pickle_keypoints(kp, des)
-        output = output_path +method_;
+        output = os.path.join(output_path,method_);
         
 #           checking output directory if this exist otherwise will be created
         checkdir(output);
@@ -220,7 +224,7 @@ def extract_feature(image):
     return features
       
 def pool_handler():
-    p = Pool(processes=6,maxtasksperchild=1);
+    p = Pool(processes=threads,maxtasksperchild=1);
     features = list(p.imap_unordered(extract_feature, list_image))
     tojson(features,report_logging + 'extract_feature.json')
     p.close()
