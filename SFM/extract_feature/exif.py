@@ -2,8 +2,10 @@
 
 # Checking if directory exist
 def checkdir(path):
-    if not os.path.exists(os.path.dirname(path)):
-        os.mkdir(os.path.dirname(path))
+    if path[-1] != '/':
+        path = path  + '/'        
+    if not os.path.exists(path):
+        os.makedirs(os.path.dirname(path))
         
 # Saving to json format
 def tojson(dictA,file_json):

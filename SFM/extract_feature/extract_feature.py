@@ -4,7 +4,7 @@ reload(logging)
   
 def checkdir(path):
     if not os.path.exists(os.path.dirname(path)):
-        os.mkdir(os.path.dirname(path))
+        os.makedirs(os.path.dirname(path))
         
 def pickle_keypoints(keypoints, descriptors):
     i = 0
