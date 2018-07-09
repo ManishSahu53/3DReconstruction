@@ -61,6 +61,10 @@ will be created automatically and all the results will be save there. By default
 a logging folder will be created inside current directory, this will keep the logs 
 of this function.
 
+**Results**
+Result of *exif.py* will be *exif.json* file. It contains information about 
+position, time of capture, width, height etc of the image.
+
 3. **extract_feature.py**
 
 Extract features function is used to extract features from images. There are 3 
