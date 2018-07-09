@@ -13,9 +13,9 @@ how to deploy the project on a live system.
 
 *Dimension* depends on Python 2.7 libraries. List of libraries can be found below:
 1.  [OpenCV](https://opencv.org/) Opencv is open source computer vision library.
-To install opencv type ```pip install opencv-python```. This will install latest
+To install opencv type ```pip install opencv-contrib-python```. This will install latest
 opencv availabe. Version 3.4.1 was used to develop dimension. To download specific
-version of openCV type ```pip install opencv-python==3.4.1 ```
+version of openCV type ```pip install opencv-contrib-python==3.4.1 ```
 
 2.  [Numpy](http://www.numpy.org/) Numpy is to store images as array of numbers.
 To install numpy type ```pip install numpy```
