@@ -83,7 +83,8 @@ parser.add_argument('-m','--method',type=int,
                     ' 2 -- SURF'  +
                     ' 3 -- ORB'   +
                     ' 4 -- BRISK' +
-                    ' 5 -- AKAZE',
+                    ' 5 -- AKAZE' +
+                    ' 6 -- STAR+ BRIEF',
                     default = 1,
                     required=False)
                                         
@@ -97,7 +98,7 @@ checkdir(output_path);
 method = args.method;
 
 # Check if method > 5
-if method > 5 or method <1:
+if method > 6 or method <1:
     sys.exit('Invalid method selected. Only %s methods are available. See help to know how to use them '%(str(5)))
 
 # Path locations
@@ -149,30 +150,37 @@ def extract_feature(image):
         _start_time = time.time();
         
         if method == 1: # Sift 
-            method_ = 'sift'
+            method_ = 'sift/'
             sift_ = cv2.xfeatures2d_SIFT.create(nfeatures = num_feature); # Predefining number of features
             kp, des = sift_.detectAndCompute(_gray,None);
             
         if method ==2: # Surf
-            method_ = 'surf'
+            method_ = 'surf/'
             surf_ = cv2.xfeatures2d.SURF_create();
             kp, des = surf_.detectAndCompute(_gray,None);
             
         if method ==3: # ORB
-            method_ = 'orb'
+            method_ = 'orb/'
             orb_ = cv2.ORB_create()#nfeatures = num_feature) # Predefining number of features
             kp,des = orb_.detectAndCompute(_gray,None);    
             
         if method == 4: # Brisk
-            method_ = 'brisk'
+            method_ = 'brisk/'
             brisk_ = cv2.BRISK_create();
             kp, des = brisk_.detectAndCompute(_gray,None);
             
         if method == 5: # AKAZE
-            method_ = 'akaze'
+            method_ = 'akaze/'
             akaze_ = cv2.AKAZE_create();
             kp, des = akaze_.detectAndCompute(_gray,None);
         
+        if method ==6: # Star + BRIEF
+            method_ = 'StarBrief/'
+            star_ = cv2.xfeatures2d.StarDetector_create()
+            brief_ = cv2.xfeatures2d.BriefDescriptorExtractor_create()
+            kp = star_.detect(_gray,None);
+            kp, des = brief_.compute(_gray, kp)
+            
 #           Store and Retrieve keypoint features
         temp = pickle_keypoints(kp, des)
         output = os.path.join(output_path,method_);
