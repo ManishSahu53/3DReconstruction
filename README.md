@@ -13,9 +13,9 @@ how to deploy the project on a live system.
 
 *Dimension* depends on Python 2.7 libraries. List of libraries can be found below:
 1.  [OpenCV](https://opencv.org/) Opencv is open source computer vision library.
-To install opencv type ```pip install opencv-python```. This will install latest
+To install opencv type ```pip install opencv-contrib-python```. This will install latest
 opencv availabe. Version 3.4.1 was used to develop dimension. To download specific
-version of openCV type ```pip install opencv-python==3.4.1 ```
+version of openCV type ```pip install opencv-contrib-python==3.4.1 ```
 
 2.  [Numpy](http://www.numpy.org/) Numpy is to store images as array of numbers.
 To install numpy type ```pip install numpy```
@@ -60,6 +60,10 @@ In case no output directory is given then inside current directory output folder
 will be created automatically and all the results will be save there. By default
 a logging folder will be created inside current directory, this will keep the logs 
 of this function.
+
+**Results**
+Result of *exif.py* will be *exif.json* file. It contains information about 
+position, time of capture, width, height etc of the image.
 
 3. **extract_feature.py**
 
