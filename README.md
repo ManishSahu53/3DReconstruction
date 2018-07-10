@@ -87,11 +87,11 @@ following methods
 ## Running the tests
 
 1. To run test dataset, go to **test_dataset**. There are 20 images available.
-First step would be to get exif information from those images.
+First step would be to get exif information from those images and number of neighbours are 9.
 Let output folder be results directory and input be test_dataset.
 
 
-Type ```python exif.py -i test_dataset -o output ```
+Type ```python exif.py -i test_dataset -o output -n 9```
 
 
 To get help type ```python exif.py -h``` to get information about how to run it.
@@ -107,7 +107,7 @@ extract feature using SIFT algorithm. So *m* would be 1.
 
 ``` python extract_feature.py -i test_dataaset -o output -m 1```
 
-There are 5 methods available so *m* can vary from 1-5.
+There are 5 methods available so *m* can vary from 1-6.
 Output folder with the name of method(here sift) will be created. **extract_feature.json** 
 will be created inside logging folder to get summary of the process.
 
