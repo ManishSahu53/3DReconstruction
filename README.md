@@ -74,7 +74,7 @@ parameters available. Input directory, Output directory ,
 Method to use for feature extraction. Input directory will contain images,
 output folder will contain extracted features. 
 
-There are 5 **Methods** available to extract features. Type 1-5 digits to use 
+There are 6 **Methods** available to extract features. Type 1-6 digits to use 
 following methods
 1. [SIFT](http://opencv-python-tutroals.readthedocs.io/en/latest/py_tutorials/py_feature2d/py_sift_intro/py_sift_intro.html)
 2. [SURF](https://docs.opencv.org/3.4/df/dd2/tutorial_py_surf_intro.html)
