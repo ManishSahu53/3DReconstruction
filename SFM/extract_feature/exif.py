@@ -94,8 +94,8 @@ def exif(path_image,path_logging):
     Coordinate = {"Exif": data}
                   
 #     Saving dictionary to json file
-    tojson(Coordinate,file_json + '/exif.json')
-    
+    tojson(Coordinate,os.path.join(file_json, 'exif.json'))
+    print('Completed. Data saved to %s'%(os.path.join(file_json,'exif.json')))
 #     Loading saved json file
 #    exif = yaml.safe_load(open(file_json))
     

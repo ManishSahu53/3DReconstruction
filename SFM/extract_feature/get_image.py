@@ -41,7 +41,7 @@ def list_image(path,path_logging):
                 
             for file_name in files:
                 if file_name.endswith(('.jpg', '.jpeg', '.JPG','.Jpg')):
-                    list_image.append((path + file_name));
+                    list_image.append((os.path.join(path,file_name)));
                     logger.info(file_name + ' found')
         
         logger.info('Total images found is: %s'%(len(list_image)))
