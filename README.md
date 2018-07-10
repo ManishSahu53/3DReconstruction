@@ -62,8 +62,10 @@ a logging folder will be created inside current directory, this will keep the lo
 of this function.
 
 **Results**
-Result of *exif.py* will be *exif.json* file. It contains information about 
-position, time of capture, width, height etc of the image.
+Result of *exif.py* will be *exif.json* file and *imagepair.json*. *Exif.json* contains information about 
+position, time of capture, width, height etc of the image and *imagepair.json* contains neighbouring images name.
+For example - if number of neighbouring images is 9 then first name represents master image name and rest 9 images will be 
+the neighbours of the master images.
 
 3. **extract_feature.py**
 
@@ -79,6 +81,8 @@ following methods
 3. [ORB](http://opencv-python-tutroals.readthedocs.io/en/latest/py_tutorials/py_feature2d/py_orb/py_orb.html)
 4. [BRISK](https://docs.opencv.org/3.0-beta/modules/features2d/doc/feature_detection_and_description.html)
 5. [AKAZE](https://docs.opencv.org/3.0-beta/modules/features2d/doc/feature_detection_and_description.html)
+6. [Star and BRIEF](https://docs.opencv.org/3.0-beta/doc/py_tutorials/py_feature2d/py_brief/py_brief.html)
+
 
 ## Running the tests
 
