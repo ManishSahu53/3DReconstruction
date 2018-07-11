@@ -34,8 +34,18 @@ Argparse is used to parse user input data. Install this type
 
 ### Installing
 
-To install Dimension on your PC, simply clone this repository and 
-install dependencies mentoned above. Python 2.7 is used to develop so using python3 
+To install Dimension on your PC, simply clone this repository 
+``` 
+git clone https://gitlab.com/manish.indshine/Dimension.git
+git checkout develop
+```
+and install dependencies mentoned above.
+```
+pip install opencv-contrib-python
+pip install multiprocessing
+pip install argparse
+```
+Python 2.7 is used to develop so using python3 
 can cause some error.
 
 ### Functions available
