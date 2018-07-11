@@ -32,6 +32,11 @@ This is used to do multicore processing. To install this type
 Argparse is used to parse user input data. Install this type 
 ```pip install argparse```
 
+6. [exifread](https://github.com/ianare/exif-py)
+exifread is used to read exif data from images. to Install this type
+```pip install ExifRead```
+
+
 ### Installing
 
 To install Dimension on your PC, simply clone this repository 
