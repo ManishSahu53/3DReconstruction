@@ -21,3 +21,7 @@
 2018-07-10 19:21:46,858 INFO DJI_0022.JPG found
 2018-07-10 19:21:46,858 INFO Total images found is: 20
 2018-07-10 19:21:46,858 INFO Total time taken is: 0.0 sec
+2018-07-11 15:39:14,333 INFO This will record message from get_image function
+2018-07-11 15:39:14,333 CRITICAL No images found in "../../test_dataset/" directory
+2018-07-11 15:39:14,333 INFO Total images found is: 0
+2018-07-11 15:39:14,333 INFO Total time taken is: 0.0 sec
