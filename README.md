@@ -49,6 +49,7 @@ and install dependencies mentoned above.
 pip install opencv-contrib-python
 pip install multiprocessing
 pip install argparse
+pip install exifread
 ```
 Python 2.7 is used to develop so using python3 
 can cause some error.
