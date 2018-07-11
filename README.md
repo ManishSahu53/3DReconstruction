@@ -122,6 +122,8 @@ extract feature using SIFT algorithm. So *m* would be 1.
 
 
 ``` python extract_feature.py -i test_dataaset -o output -m 1```
+
+
 To get help type ```python extract_feature.py -h``` to get information about how to run it.
 
 There are 6 methods available so *m* can vary from 1-6.
