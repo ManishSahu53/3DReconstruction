@@ -97,28 +97,45 @@ parser.add_argument('-n','--neighbour',
                     
 args = parser.parse_args()   
 path_image = args.input;
-file_json = args.output;
+path_output = args.output;
 num_neighbour = args.neighbour;
 
-path_logging = './logging/'
+
 #path_image = '/home/indshine-2/Downloads/Dimension/Data/test/'
 #file_json = '/home/indshine-2/Downloads/Dimension/output/SFM/exif/exif.json'
 
 #logging.basicConfig(format='%(asctime)s %(message)s',
 #                    filename= path_logging + '/exif.log',
 #                    level=logging.DEBUG);
-                    
-# Checking output directories
-checkdir(file_json);
+   
+# Converting to realative path
+path_image = os.path.realpath(path_image)
+saving_folder = 'exif'
+
+# Update path_output
+path_output = os.path.join(path_output,saving_folder)       
+path_logging = os.path.join(path_output,'logging')
+path_data = os.path.join(path_output,'data')
+
+# Checking if path  exists, otherwise will be created
+checkdir(path_output);
 checkdir(path_logging);
+checkdir(path_data);
 
 # Fatal error of image directory doesn't exist
 if not os.path.exists(os.path.dirname(path_image)):
 #    logging.fatal('Input directory given was not found')
     sys.exit('Input directory given was not found')
         
+       
 def exif(path_image,path_logging):
     list_image_ = get_image.list_image(path_image,path_logging);
+    
+    # Exit if no image was found
+    if len(list_image_) == 0:
+    #    logger.fatal('No images were found in input folder')
+        sys.exit('No images were found in %s folder'%(path_image))
+        
     data=[];
     data.append(["Image","Lat","Long","Elevation","Focal length in mm", "Width(px)","Height(px)","Capture Time"])
 
@@ -142,8 +159,10 @@ def exif(path_image,path_logging):
     Coordinate = {"Exif": data}
                   
 #     Saving dictionary to json file
-    tojson(Coordinate,os.path.join(file_json, 'exif.json'))
-    print('Extracted Exif details. Data saved to %s'%(os.path.join(file_json,'exif.json')))
+    tojson(Coordinate,os.path.join(path_data, 'exif.json'))
+    print('Extracted Exif details. Data saved to %s'%(os.path.join(path_data,'exif.json')))
+    return path_data
+    
 #     Loading saved json file
 #    exif = yaml.safe_load(open(file_json))
 
@@ -170,13 +189,13 @@ def image_pair(path_exif,path_imagepair):
         neighbour.append(get_neighbour([_lat[j],_long[j],image[j]],[_lat,_long,image],num_neighbour))
     
 #    Saving data to json format
-    tojson(neighbour,os.path.join(path_imagepair, 'imagepair.json'))
-    print("Calculated neighbouring images. Data saved to %s"%(os.path.join(path_imagepair, 'imagepair.json')))
+    tojson(neighbour,os.path.join(path_data, 'imagepair.json'))
+    print("Calculated neighbouring images. Data saved to %s"%(os.path.join(path_data, 'imagepair.json')))
 
         
 def main():
-    exif(path_image,path_logging)
-    image_pair(file_json,file_json)
+    path_data = exif(path_image,path_logging)
+    image_pair(path_data,path_output)
     
 if __name__ == '__main__':
     try:

@@ -25,7 +25,7 @@ def list_image(path,path_logging):
             return logger
             
 #         Logging setup
-        logger = setup_logger('get_image', path_logging + 'get_image.log')
+        logger = setup_logger('get_image', os.path.join(path_logging, 'get_image.log'))
         logger.info('This will record message from get_image function')
     
 #         Starting recording time

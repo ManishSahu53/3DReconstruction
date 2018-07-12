@@ -3,7 +3,9 @@ import logging
 reload(logging)
   
 def checkdir(path):
-    if not os.path.exists(os.path.dirname(path)):
+    if path[-1] != '/':
+        path = path  + '/'        
+    if not os.path.exists(path):
         os.makedirs(os.path.dirname(path))
         
 def pickle_keypoints(keypoints, descriptors):
@@ -25,6 +27,22 @@ def unpickle_keypoints(array):
         keypoints.append(temp_feature)
         descriptors.append(temp_descriptor)
     return keypoints, np.array(descriptors)
+
+def num2method(number):
+    if number == 1:
+        method_ = 'sift'
+    if number == 2:
+        method_ = 'surf'
+    if number == 3:
+        method_ = 'orb'
+    if number == 4:
+        method_ = 'brisk'
+    if number == 5:
+        method_ = 'akaze'
+    if number == 6:
+        method_ = 'StarBrief'
+    return method_
+    
     
 def pause():
     programPause = raw_input("Press the <ENTER> key to continue...")
@@ -59,10 +77,7 @@ import multiprocessing
 from multiprocessing import Pool
 import sys
 import argparse
-import json 
-#import logging
-#reload(logging)
-
+import json, yaml 
 
 parser = argparse.ArgumentParser(description='See description below to see all available options')
 
@@ -72,7 +87,7 @@ parser.add_argument('-i','--input',
                     
 parser.add_argument('-o','--output',
                     help='Output directory where all the output will be stored. [Default] output folder in current directory',
-                    default = './Output/',
+                    default = './output/',
                     required=False)
                     
 parser.add_argument('-m','--method',type=int,
@@ -88,21 +103,42 @@ parser.add_argument('-m','--method',type=int,
                     default = 1,
                     required=False)
                                         
+parser.add_argument('-n','--numfeatures',type=int,
+                    help='This is used to limit number of features'+ 
+                    '.Enter an integer to restrict number of features.'+
+                    'This method is only available to SIFT and ORB.[Default] is not threshold given',
+                    default = 0,
+                    required=False)
 
 args = parser.parse_args()
 
 path_image = args.input;
-output_path = args.output;
-
-checkdir(output_path);
+path_output = args.output;
+num_feature = args.numfeatures;
 method = args.method;
+
+print(num_feature)
+saving_feature = 'extract_feature'
+saving_matches = 'matching_feature'
+
+# Update path_output and output directories
+path_exif = os.path.join(path_output,'exif','data')
+path_output = os.path.join(path_output,saving_feature)       
+path_logging = os.path.join(path_output,'logging')
+path_report = os.path.join(path_output,'report')
+path_data = os.path.join(path_output,'data')
+
+# Checking if path  exists, otherwise will be created
+checkdir(path_output)
+checkdir(path_logging)
+checkdir(path_report)
+checkdir(path_data)
 
 # Check if method > 5
 if method > 6 or method <1:
-    sys.exit('Invalid method selected. Only %s methods are available. See help to know how to use them '%(str(5)))
+    sys.exit('Invalid method selected. Only %s methods are available. See help to know how to use them '%(str(6)))
 
-# Path locations
-path_logging = './logging/';
+
 #report_logging = './report/';
 #output_location = '/home/indshine-2/Downloads/Dimension/output/SFM/extract_feature/';
 #path_image = '/home/indshine-2/Downloads/Dimension/Data/test/'
@@ -112,16 +148,13 @@ path_logging = './logging/';
 #                    filename= path_logging + '/extract_feature.log',
 #                    level=logging.DEBUG);
 
-logname= path_logging + '/extract_feature'
-#logger = create_logger(logname)
 #logger.info('Starting up logs')
 
-# Checking if path  exists, otherwise will be created
-checkdir(path_logging);
-#checkdir(report_logging);
 
-# Parameters
-num_feature = 40000;
+# Converting to realative path
+path_image = os.path.realpath(path_image)
+
+# Initialising Parameters
 count_feature = [];
 append_image = [];
 append_time = [];
@@ -151,22 +184,38 @@ def extract_feature(image):
         
         if method == 1: # Sift 
             method_ = 'sift/'
-            sift_ = cv2.xfeatures2d_SIFT.create(nfeatures = num_feature); # Predefining number of features
+            if num_feature == 0:
+                sift_ = cv2.xfeatures2d_SIFT.create();
+            else:
+                sift_ = cv2.xfeatures2d_SIFT.create(nfeatures = num_feature); # Predefining number of features
+                
             kp, des = sift_.detectAndCompute(_gray,None);
             
         if method ==2: # Surf
             method_ = 'surf/'
-            surf_ = cv2.xfeatures2d.SURF_create();
+            if num_feature == 0:
+                surf_ = cv2.xfeatures2d.SURF_create()
+            else:
+                surf_ = cv2.xfeatures2d.SURF_create(2000)# ~ 50000 features 
+                
             kp, des = surf_.detectAndCompute(_gray,None);
             
         if method ==3: # ORB
             method_ = 'orb/'
-            orb_ = cv2.ORB_create()#nfeatures = num_feature) # Predefining number of features
+            if num_feature ==0:
+                 orb_ = cv2.ORB_create()
+            else:  
+                 orb_ = cv2.ORB_create(nfeatures = num_feature) # Predefining number of features
+                 
             kp,des = orb_.detectAndCompute(_gray,None);    
             
         if method == 4: # Brisk
-            method_ = 'brisk/'
-            brisk_ = cv2.BRISK_create();
+            method_ = 'brisk/' 
+            if num_feature ==0:
+                  brisk_ = cv2.BRISK_create()
+            else:
+                brisk_ = cv2.BRISK_create(75) # ~ 50,000 features 
+                
             kp, des = brisk_.detectAndCompute(_gray,None);
             
         if method == 5: # AKAZE
@@ -176,21 +225,21 @@ def extract_feature(image):
         
         if method ==6: # Star + BRIEF
             method_ = 'StarBrief/'
-            star_ = cv2.xfeatures2d.StarDetector_create()
+            star_ = cv2.xfeatures2d.StarDetector_create() # ~ 80,000 features
             brief_ = cv2.xfeatures2d.BriefDescriptorExtractor_create()
             kp = star_.detect(_gray,None);
             kp, des = brief_.compute(_gray, kp)
-            
+        
 #           Store and Retrieve keypoint features
         temp = pickle_keypoints(kp, des)
-        output = os.path.join(output_path,method_);
         
-#           checking output directory if this exist otherwise will be created
-        checkdir(output);
-        output = output + os.path.splitext(os.path.basename(image))[0]
+#        Updating path_data to path_feature
+        path_feature = os.path.join(path_data,method_);
+        checkdir(path_feature)
         
 #           Saving features as numpy compressed array
-        np.save(output,temp)
+        path_feature = path_feature + os.path.splitext(os.path.basename(image))[0]
+        np.save(path_feature,temp)
         
 #            Printing and logging info
         _end_time = time.time()
@@ -205,7 +254,7 @@ def extract_feature(image):
                 "Time" : _time_taken,
                 "Method" : method_}
                 
-        tojson(feature,path_logging + os.path.splitext(os.path.basename(image))[0] + '.json')
+        tojson(feature,os.path.join(path_logging,os.path.splitext(os.path.basename(image))[0] + '.json'))
         
         print('finished processing %s and took %s sec per thread'
         %(os.path.splitext(os.path.basename(image))[0],_time_taken) )
@@ -229,17 +278,22 @@ def extract_feature(image):
   
 #       Returns list of images
     return features
-      
-def pool_handler():
-    p = Pool(processes=threads,maxtasksperchild=1);
-    features = list(p.imap_unordered(extract_feature, list_image))
-    tojson(features,path_logging + 'extract_feature.json')
-    p.close()
-
-    
+            
+def pool_extract_feature():
+    try:
+        p = Pool(processes=threads,maxtasksperchild=1);
+        features = list(p.imap_unordered(extract_feature, list_image))
+        tojson(features,os.path.join(path_report, (num2method(method) + '_extract_feature.json')))
+        p.close()
+        
+    except KeyboardInterrupt:
+        sys.exit('KeyboardInterruption, Terminated')
+        pause()
+        
 def main():
     try:
-        pool_handler()
+        pool_extract_feature()
+#        pool_match_feature()
 #        extract_feature(list_image)
     except KeyboardInterrupt:
 #        logger.fatal('KeyboardInterruption, Terminated')

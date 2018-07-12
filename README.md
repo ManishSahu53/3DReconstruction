@@ -36,6 +36,11 @@ Argparse is used to parse user input data. Install this type
 exifread is used to read exif data from images. to Install this type
 ```pip install ExifRead```
 
+7. [Pyyaml](https://pyyaml.org/wiki/PyYAML)
+Pyyaml is a data serialization format designed to easy readability and interaction with python.
+
+8.[utm](https://github.com/Turbo87/utm)
+Utm is used to convert coordinate system from geographic to projected and vice versa.
 
 ### Installing
 
@@ -50,6 +55,8 @@ pip install opencv-contrib-python
 pip install multiprocessing
 pip install argparse
 pip install exifread
+pip install PyYAML
+pip install utm
 ```
 Python 2.7 is used to develop so using python3 
 can cause some error.
@@ -102,26 +109,27 @@ following methods
 
 ## Running the tests
 
-1. To run test dataset, go to **test_dataset**. There are 20 images available.
+1. To run test dataset, change directory or go to **Dimension/SFM/extract_feature**. 
+The test dataset contains 20 images. They are present in **Dimension/test_dataset/images** folder.
+
 First step would be to get exif information from those images and number of neighbours are 9.
 Let output folder be results directory and input be test_dataset.
 
 
-Type ```python exif.py -i test_dataset -o output -n 9```
+```python exif.py -i test_dataset/images -o output -n 9```
 
 
 To get help type ```python exif.py -h``` to get information about how to run it.
 
 
 This will extract exif information from images and output **exif.json** file.
-This file contains exif information like *Latitude, Longitude, Elevation, Time of photo capture,
-focal length, height and width* of image in pixels.
+This output json file contains exif information like *Latitude, Longitude, Elevation, Time of photo capture,focal length, height and width* of image in pixels.
 
 2. Next step would be to extract features from images. In this example we will 
 extract feature using SIFT algorithm. So *m* would be 1. 
 
 
-``` python extract_feature.py -i test_dataaset -o output -m 1```
+``` python extract_feature.py -i test_dataset/images -o output -m 1```
 
 
 To get help type ```python extract_feature.py -h``` to get information about how to run it.
@@ -129,6 +137,15 @@ To get help type ```python extract_feature.py -h``` to get information about how
 There are 6 methods available so *m* can vary from 1-6.
 Output folder with the name of method(here sift) will be created. **extract_feature.json** 
 will be created inside logging folder to get summary of the process.
+
+## To Do
+1. SFM
+   - Features Extraction
+     * - [] Setup GPU + CPU extraction
+     * - [] Multi GPU support
+     * - [] Automatic Thresholding by assigning desired features
+     * - [] Saving features with image for visualization
+
 
 ### And coding style tests
 
