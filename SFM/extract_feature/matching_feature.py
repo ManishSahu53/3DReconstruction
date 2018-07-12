@@ -5,16 +5,17 @@ def pickle_keypoints(keypoints, descriptors):
     temp_array = []
     for point in keypoints:
         temp = (point.pt, point.size, point.angle, point.response, point.octave,
-        point.class_id)#, descriptors[i])     
-        ++i
+        point.class_id, descriptors[i])     
+        i = i +1
         temp_array.append(temp)
     return temp_array
 
 def unpickle_keypoints(image,path_feature):
-
+    path_feature = os.path.realpath(path_feature);
+    
     image = os.path.splitext(os.path.basename(image))[0];
     image = os.path.join(path_feature,image+'.npy');
-    array = pickle.load( open( image, "rb" ) );
+    array = np.load( open( image, "rb" ) );
     
     keypoints = []
     descriptors = []
@@ -158,7 +159,8 @@ def match_feature(imagepair,path_feature,path_output):
             pair_im = imagepair[i][j];
             
 #            Retrieve Keypoint Features
-            kp1, desc1 = unpickle_keypoints(master_im,path_feature)
+            kp1, des1 = unpickle_keypoints(master_im,path_feature)
+            kp2, des2 = unpickle_keypoints(pair_im,path_feature)
             
         #      FLANN parameters
             FLANN_INDEX_KDTREE = 1
@@ -166,13 +168,14 @@ def match_feature(imagepair,path_feature,path_output):
             search_params = dict(checks=50)   # or pass empty dictionary
         
         #     loading saved keypoints and descriptors
-            kp1, desc1 = unpickle_keypoints(keypoints_database)
             flann = cv2.FlannBasedMatcher(index_params, search_params)
             matches = flann.knnMatch(des1,des2,k=2)
             
             # store all the good matches as per Lowe's ratio test.
             good = []
-            for m,n in matches:
+            for i,(m,n) in enumerate(matches):
+#                print(m.distance)
+#                print(n.distance)
                 if m.distance < ratio*n.distance:
                     good.append(m)
             

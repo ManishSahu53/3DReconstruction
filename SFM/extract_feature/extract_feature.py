@@ -13,8 +13,8 @@ def pickle_keypoints(keypoints, descriptors):
     temp_array = []
     for point in keypoints:
         temp = (point.pt, point.size, point.angle, point.response, point.octave,
-        point.class_id)#, descriptors[i])     
-        ++i
+        point.class_id, descriptors[i])     
+        i = i +1
         temp_array.append(temp)
     return temp_array
 
