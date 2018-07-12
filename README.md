@@ -141,10 +141,10 @@ will be created inside logging folder to get summary of the process.
 ## To Do
 1. SFM
    - Features Extraction
-     * - [] Setup GPU + CPU extraction
-     * - [] Multi GPU support
-     * - [] Automatic Thresholding by assigning desired features
-     * - [] Saving features with image for visualization
+     * - [ ] Setup GPU + CPU extraction
+     * - [ ] Multi GPU support
+     * - [ ] Automatic Thresholding by assigning desired features
+     * - [ ] Saving features with image for visualization
 
 
 ### And coding style tests
