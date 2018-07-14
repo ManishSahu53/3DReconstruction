@@ -1,5 +1,21 @@
 """ Matching features from images, feature_matching.py"""
 
+import logging
+reload(logging)
+  
+def checkdir(path):
+    if path[-1] != '/':
+        path = path  + '/'        
+    if not os.path.exists(path):
+        os.makedirs(os.path.dirname(path))
+        
+def pause():
+    programPause = raw_input("Press the <ENTER> key to continue...")
+    
+def tojson(dictA,file_json):
+    with open(file_json, 'w') as f:
+        json.dump(dictA, f,indent=4, separators=(',', ': '), ensure_ascii=False,encoding='utf-8')
+        
 def pickle_keypoints(keypoints, descriptors):
     i = 0
     temp_array = []
@@ -25,6 +41,11 @@ def unpickle_keypoints(image,path_feature):
         keypoints.append(temp_feature)
         descriptors.append(temp_descriptor)
     return keypoints, np.array(descriptors)
+
+def num2para(number):
+    if number == 1:
+        parameter_ = 'ANN/Hamming'
+    return parameter_
 
 def num2method(number):
     if number == 1:
@@ -61,63 +82,102 @@ import sys,os
 import argparse
 import json, yaml
 import numpy as np
+import time 
 
-parser = argparse.ArgumentParser(description='See description below to see all available options')
+#parser = argparse.ArgumentParser(description='See description below to see all available options')
+#
+#parser.add_argument('-i','--input',
+#                    help='Output directory feature extraction step.',
+#                    required=True)
+#                    
+#parser.add_argument('-o','--output',
+#                    help='Output directory where all the output will be stored. [Default] output folder in current directory',
+#                    default = './output/',
+#                    required=False)
+#                    
+#parser.add_argument('-m','--method',type=int,
+#                    help='Methods that will be used to match '+ 
+#                    'features. Enter an integer value corresponding to options'+
+#                    ' given below. Available methods are ' + 
+#                    ' 1 -- ANN ' +
+#                    ' 2 -- BruteForce' +
+#                    ' [Default] is Approximate Nearest Neighbour (ANN)',
+#                    default = 1,
+#                    required=False)
+#                                        
+#parser.add_argument('-p','--parameter',type=int,
+#                    help='Paramter used to calculate neighbour. Available methods are'+
+#                    ' 1 -- Euclidian Distance/Hamming Distance' +
+#                    ' 2 -- Other' +
+#                    ' [Default] Euclidian Distance is used for SIFT,SURF. Hamming is used for Binary decriptors',
+#                    default = 1,
+#                    required=False)
+#                    
+#parser.add_argument('-f','--feature',type=int,
+#                    help='feature method that is used for matching'+
+#                    ' 1 -- SIFT ' +
+#                    ' 2 -- SURF'  +
+#                    ' 3 -- ORB'   +
+#                    ' 4 -- BRISK' +
+#                    ' 5 -- AKAZE' +
+#                    ' 6 -- STAR+ BRIEF'+
+#                    ' [Default] is SIFT',
+#                    default = 1,
+#                    required=False)
+#                    
+#parser.add_argument('-r','--ratio',type=float,
+#                    help='Define a ratio threshold for ratio test',
+#                    default = 0.8,
+#                    required=False)
 
-parser.add_argument('-i','--input',
-                    help='Output directory feature extraction step.',
-                    required=True)
-                    
-parser.add_argument('-o','--output',
-                    help='Output directory where all the output will be stored. [Default] output folder in current directory',
-                    default = './output/',
-                    required=False)
-                    
-parser.add_argument('-m','--method',type=int,
-                    help='Methods that will be used to match '+ 
-                    'features. Enter an integer value corresponding to options'+
-                    ' given below. Available methods are ' + 
-                    ' 1 -- ANN ' +
-                    ' 2 -- BruteForce' +
-                    ' [Default] is Approximate Nearest Neighbour (ANN)',
-                    default = 1,
-                    required=False)
-                                        
-parser.add_argument('-p','--parameter',type=int,
-                    help='Paramter used to calculate neighbour. Available methods are'+
-                    ' 1 -- Eucledian Distance' +
-                    ' 2 -- Hamming Distance' +
-                    ' [Default] is Eucledian Distance',
-                    default = 1,
-                    required=False)
-                    
-parser.add_argument('-f','--feature',type=int,
-                    help='feature method that is used for matching'+
-                    ' 1 -- SIFT ' +
-                    ' 2 -- SURF'  +
-                    ' 3 -- ORB'   +
-                    ' 4 -- BRISK' +
-                    ' 5 -- AKAZE' +
-                    ' 6 -- STAR+ BRIEF'+
-                    ' [Default] is SIFT',
-                    default = 1,
-                    required=False)
-                    
-parser.add_argument('-r','--ratio',type=float,
-                    help='Define a ratio threshold for ratio test',
-                    default = 0.8,
-                    required=False)
-args = parser.parse_args()
+#parser.add_argument('-t','--thread',type=int,
+#                    help='Number of processing threads to be used ' +
+#                    'for multiprocessing.[Default] Using all the threads available',
+#                    default = 0,
+#                    required=False)
+#
 
-path_input = args.input;
-path_output = args.output;
-parameter = args.parameter;
-method = args.method;
-ratio = args.ratio;
+# Global Variable
+global path_output
+global path_logging
+global path_report
+global path_data
 
-method_feature = num2method(args.feature);
+                  
+#args = parser.parse_args()
+#
+#path_input = args.input;
+#path_output = args.output;
+#parameter = args.parameter;
+#method = args.method;
+#ratio = args.ratio;
+#thread = args.thread;
+#method_feature = num2method(args.feature);
 
-# output folder containing exif and imagepair
+path_input = './output/'
+path_output = './output/'
+parameter = 1
+method = 1
+ratio = 0.8
+method_feature = num2method(method)
+thread = multiprocessing.cpu_count();
+
+# Saving
+saving_matches = 'matching_feature'
+
+# Update path_output and output directories
+path_output = os.path.join(path_output,saving_matches)       
+path_logging = os.path.join(path_output,'logging') # Individual file record
+path_report = os.path.join(path_output,'report') # Summary of whole file
+path_data = os.path.join(path_output,'data') # Any data to be saved
+
+# Checking if path  exists, otherwise will be created
+checkdir(path_output)
+checkdir(path_logging)
+checkdir(path_report)
+checkdir(path_data)
+
+# Finding exif folder containing exif, imagepair, descriptors
 path_exif = os.path.join(path_input,'exif','data')
 path_feature =os.path.join(path_input,'extract_feature','data',method_feature)
 
@@ -136,6 +196,7 @@ _num_feature = numfeature(path_feature)
 _num_image = len(imagepair)
 _num_pair = len(imagepair[0])
 
+# If number of images is not equal to number of features extract.
 if _num_feature != _num_image:
     sys.exit('Number of features and number of images are not same. Check if features extract ran properly')
     
@@ -145,46 +206,116 @@ if os.path.isfile(file_exif):
 else:
     sys.exit('No exif.json found. extract_feature.py command first before running matching_feature.py')
 
+# Checking if imagepair.json exist or not
 if os.path.isfile(file_imagepair):
     print('imagepair.json found')
 else:
     sys.exit('No imagepair.json found. Run exif.py command first before running matching_feature.py')
+    
+# Allowing only euclidian/hamming distance to be used
+if parameter != 1:
+    sys.exit('Other matching matrices not implemented. Use Euclidian/hamming distance')    
 
+# Number of threads to maximum if not assigned any.
+if thread ==0:
+    thread = multiprocessing.cpu_count();
+    
+elif thread>multiprocessing.cpu_count():
+    thread = multiprocessing.cpu_count();
+    print('Number of threads assigned (%s) is greater than maximum available (%s)'%(thread,multiprocessing.cpu_count()))
+    
+#if args.feature == 1 or 2:
+#    similarity_matric = 'euclidian' # Non binary
+#else:
+#    similarity_matric = 'hamming' # For binary
+  
+image = []
+valid_match_num = []
+invalid_match_num = []
+inlier_ratio = []
+match_num = []
+match_report = []
 
+def match_feature(imagepair):#,path_feature,path_output):
 
-def match_feature(imagepair,path_feature,path_output):
-    for i in range(_num_image):
+    try:
+        match_data = []
+#        for i in range(_num_image):
+        _pair_logging = [];
+        _start_time = time.time()
+        master_im = imagepair[0];
+
         for j in range(1,_num_pair):
-            master_im = imagepair[i][0];
-            pair_im = imagepair[i][j];
+            pair_im = imagepair[j];
             
-#            Retrieve Keypoint Features
+#                Retrieve Keypoint Features
             kp1, des1 = unpickle_keypoints(master_im,path_feature)
             kp2, des2 = unpickle_keypoints(pair_im,path_feature)
             
-        #      FLANN parameters
+#                  FLANN parameters
             FLANN_INDEX_KDTREE = 1
             index_params = dict(algorithm = FLANN_INDEX_KDTREE, trees = 5)
             search_params = dict(checks=50)   # or pass empty dictionary
         
-        #     loading saved keypoints and descriptors
+#                 loading saved keypoints and descriptors
             flann = cv2.FlannBasedMatcher(index_params, search_params)
-            matches = flann.knnMatch(des1,des2,k=2)
+            match = flann.knnMatch(des1,des2,k=2)
             
-            # store all the good matches as per Lowe's ratio test.
-            good = []
-            for i,(m,n) in enumerate(matches):
-#                print(m.distance)
-#                print(n.distance)
+#                 store all the good matches as per Lowe's ratio test.
+            valid_match = []
+            for _k,(m,n) in enumerate(match):
                 if m.distance < ratio*n.distance:
-                    good.append(m)
+                    valid_match.append(m)
+                    
+#                Printing and logging info
+#            logger.info('Image %s processed, took : %s sec per thread'
+#            %(os.path.basename(image),str(_time_taken)))
             
+            _pair_logging.append({"Pair im" : pair_im,
+                                 "Total matches" : len(match),
+                                 "Valid matches" : len(valid_match),
+                                 "Inlier ratio" : len(valid_match)/len(match)})
             
+#           Appending matches data for saving 
+            match_data.append([valid_match,[master_im,pair_im]])
+         
+#         Updating path_data to path_feature
+        print(master_im)
+        path_match = os.path.join(path_data,method_feature);
+        checkdir(path_match)
+        
+#         Saving features as numpy compressed array
+        path_match = os.path.join(path_match, os.path.splitext(os.path.basename(master_im))[0])
+        np.save(path_match,match_data)
+        
+        _end_time = time.time()
+        _time_taken = round(_end_time - _start_time,1) 
+        
+
+        _master_logging = {"Master Image" : master_im,
+                "Pair Images" : _pair_logging,
+                "Features extraction method" : method_feature,
+                "Threshold Ration" : ratio,
+                "Similarity matric" : num2para(parameter),
+                "Time" : _time_taken};
+                
+#         Saving corresponding matches of master image to file 
+        tojson(_master_logging,os.path.join(path_logging,os.path.splitext(os.path.basename(master_im))[0] + '.json'))
+   
+        match_report.append(_master_logging)
+           
+    except KeyboardInterrupt:
+#        logger.fatal('KeyboardInterruption, Terminated')
+        sys.exit('KeyboardInterruption, Terminated')
+        pause()
+  
+    return match_report
+    
 def pool_match_feature():
     try:
-        p = Pool(processes=threads,maxtasksperchild=1);
-        features = list(p.imap_unordered(extract_feature, list_image))
-        tojson(features,os.path.join(path_report, num2method(method), '_match_feature.json'))
+        p = Pool(processes=thread,maxtasksperchild=1);
+        match = list(p.imap_unordered(match_feature,imagepair))#,path_feature,path_output))
+        tojson(match,os.path.join(path_report, num2method(method)+ '_match_feature.json'))
         p.close()
         
     except KeyboardInterrupt:
@@ -193,7 +324,7 @@ def pool_match_feature():
 
 def main():
     try:
-        pool_extract_feature()
+        pool_match_feature()
 #        pool_match_feature()
 #        extract_feature(list_image)
     except KeyboardInterrupt:

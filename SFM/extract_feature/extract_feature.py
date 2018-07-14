@@ -119,7 +119,6 @@ method = args.method;
 
 print(num_feature)
 saving_feature = 'extract_feature'
-saving_matches = 'matching_feature'
 
 # Update path_output and output directories
 path_exif = os.path.join(path_output,'exif','data')
