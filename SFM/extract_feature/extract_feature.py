@@ -127,6 +127,10 @@ path_logging = os.path.join(path_output,'logging')
 path_report = os.path.join(path_output,'report')
 path_data = os.path.join(path_output,'data')
 
+#Updating path_data to path_feature
+path_feature = os.path.join(path_data,num2method(method));
+checkdir(path_feature)
+
 # Checking if path  exists, otherwise will be created
 checkdir(path_output)
 checkdir(path_logging)
@@ -232,7 +236,7 @@ def extract_feature(image):
 #           Store and Retrieve keypoint features
         temp = pickle_keypoints(kp, des)
         
-#        Updating path_data to path_feature
+#        Updating output path
         path_feature = os.path.join(path_data,method_);
         checkdir(path_feature)
         

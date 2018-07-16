@@ -84,58 +84,58 @@ import json, yaml
 import numpy as np
 import time 
 
-#parser = argparse.ArgumentParser(description='See description below to see all available options')
-#
-#parser.add_argument('-i','--input',
-#                    help='Output directory feature extraction step.',
-#                    required=True)
-#                    
-#parser.add_argument('-o','--output',
-#                    help='Output directory where all the output will be stored. [Default] output folder in current directory',
-#                    default = './output/',
-#                    required=False)
-#                    
-#parser.add_argument('-m','--method',type=int,
-#                    help='Methods that will be used to match '+ 
-#                    'features. Enter an integer value corresponding to options'+
-#                    ' given below. Available methods are ' + 
-#                    ' 1 -- ANN ' +
-#                    ' 2 -- BruteForce' +
-#                    ' [Default] is Approximate Nearest Neighbour (ANN)',
-#                    default = 1,
-#                    required=False)
-#                                        
-#parser.add_argument('-p','--parameter',type=int,
-#                    help='Paramter used to calculate neighbour. Available methods are'+
-#                    ' 1 -- Euclidian Distance/Hamming Distance' +
-#                    ' 2 -- Other' +
-#                    ' [Default] Euclidian Distance is used for SIFT,SURF. Hamming is used for Binary decriptors',
-#                    default = 1,
-#                    required=False)
-#                    
-#parser.add_argument('-f','--feature',type=int,
-#                    help='feature method that is used for matching'+
-#                    ' 1 -- SIFT ' +
-#                    ' 2 -- SURF'  +
-#                    ' 3 -- ORB'   +
-#                    ' 4 -- BRISK' +
-#                    ' 5 -- AKAZE' +
-#                    ' 6 -- STAR+ BRIEF'+
-#                    ' [Default] is SIFT',
-#                    default = 1,
-#                    required=False)
-#                    
-#parser.add_argument('-r','--ratio',type=float,
-#                    help='Define a ratio threshold for ratio test',
-#                    default = 0.8,
-#                    required=False)
+parser = argparse.ArgumentParser(description='See description below to see all available options')
 
-#parser.add_argument('-t','--thread',type=int,
-#                    help='Number of processing threads to be used ' +
-#                    'for multiprocessing.[Default] Using all the threads available',
-#                    default = 0,
-#                    required=False)
-#
+parser.add_argument('-i','--input',
+                    help='Output directory feature extraction step.',
+                    required=True)
+                    
+parser.add_argument('-o','--output',
+                    help='Output directory where all the output will be stored. [Default] output folder in current directory',
+                    default = './output/',
+                    required=False)
+                    
+parser.add_argument('-m','--method',type=int,
+                    help='Methods that will be used to match '+ 
+                    'features. Enter an integer value corresponding to options'+
+                    ' given below. Available methods are ' + 
+                    ' 1 -- ANN ' +
+                    ' 2 -- BruteForce' +
+                    ' [Default] is Approximate Nearest Neighbour (ANN)',
+                    default = 1,
+                    required=False)
+                                        
+parser.add_argument('-p','--parameter',type=int,
+                    help='Paramter used to calculate neighbour. Available methods are'+
+                    ' 1 -- Euclidian Distance/Hamming Distance' +
+                    ' 2 -- Other' +
+                    ' [Default] Euclidian Distance is used for SIFT,SURF. Hamming is used for Binary decriptors',
+                    default = 1,
+                    required=False)
+                    
+parser.add_argument('-f','--feature',type=int,
+                    help='feature method that is used for matching'+
+                    ' 1 -- SIFT ' +
+                    ' 2 -- SURF'  +
+                    ' 3 -- ORB'   +
+                    ' 4 -- BRISK' +
+                    ' 5 -- AKAZE' +
+                    ' 6 -- STAR+ BRIEF'+
+                    ' [Default] is SIFT',
+                    default = 1,
+                    required=False)
+                    
+parser.add_argument('-r','--ratio',type=float,
+                    help='Define a ratio threshold for ratio test',
+                    default = 0.8,
+                    required=False)
+
+parser.add_argument('-t','--thread',type=int,
+                    help='Number of processing threads to be used ' +
+                    'for multiprocessing.[Default] Using all the threads available',
+                    default = 0,
+                    required=False)
+
 
 # Global Variable
 global path_output
@@ -144,23 +144,23 @@ global path_report
 global path_data
 
                   
-#args = parser.parse_args()
-#
-#path_input = args.input;
-#path_output = args.output;
-#parameter = args.parameter;
-#method = args.method;
-#ratio = args.ratio;
-#thread = args.thread;
-#method_feature = num2method(args.feature);
+args = parser.parse_args()
 
-path_input = './output/'
-path_output = './output/'
-parameter = 1
-method = 1
-ratio = 0.8
-method_feature = num2method(method)
-thread = multiprocessing.cpu_count();
+path_input = args.input;
+path_output = args.output;
+parameter = args.parameter; # Hamming and Euclidian distance
+method = args.method; # ANN and Hamming
+ratio = args.ratio;
+thread = args.thread;
+method_feature = num2method(args.feature); # SIFT,SURF,ORB etc
+
+#path_input = './output/'
+#path_output = './output/'
+#parameter = 1
+#method = 1
+#ratio = 0.8
+#method_feature = num2method(3)
+#thread = multiprocessing.cpu_count();
 
 # Saving
 saving_matches = 'matching_feature'
@@ -247,34 +247,57 @@ def match_feature(imagepair):#,path_feature,path_output):
 
         for j in range(1,_num_pair):
             pair_im = imagepair[j];
+            valid_match = []
             
 #                Retrieve Keypoint Features
             kp1, des1 = unpickle_keypoints(master_im,path_feature)
             kp2, des2 = unpickle_keypoints(pair_im,path_feature)
             
-#                  FLANN parameters
-            FLANN_INDEX_KDTREE = 1
-            index_params = dict(algorithm = FLANN_INDEX_KDTREE, trees = 5)
-            search_params = dict(checks=50)   # or pass empty dictionary
-        
-#                 loading saved keypoints and descriptors
-            flann = cv2.FlannBasedMatcher(index_params, search_params)
-            match = flann.knnMatch(des1,des2,k=2)
+#            Changing matching method for SIFT/SURF and Binary features.
+#            Binary doesn't have ANN option and so Brute Force method is used.
             
-#                 store all the good matches as per Lowe's ratio test.
-            valid_match = []
-            for _k,(m,n) in enumerate(match):
-                if m.distance < ratio*n.distance:
-                    valid_match.append(m)
+            if args.feature == 1 or args.feature == 2:
+#                FLANN parameters
+                FLANN_INDEX_KDTREE = 1
+                index_params = dict(algorithm = FLANN_INDEX_KDTREE, trees = 5)
+                search_params = dict(checks=50)   # or pass empty dictionary
+            
+#                loading saved keypoints and descriptors
+                flann = cv2.FlannBasedMatcher(index_params, search_params)
+                match_ = flann.knnMatch(des1,des2,k=2)
+                
+#                store all the good matches as per Lowe's ratio test.
+
+                for _k,(m,n) in enumerate(match_):
+                    if m.distance < ratio*n.distance:
+                        valid_match.append(m)
+#                        pts1.append(kp1[m.trainIdx].pt) # Train is master image
+#                        pts2.append(kp2[m.queryIdx].pt) $ Query is pair image
+                        
+            elif args.feature == 3 or args.feature == 4 or args.feature == 5 or args.feature == 6: # For binary descriptors, using hamming distance
+                
+                bf = cv2.BFMatcher(cv2.NORM_HAMMING, crossCheck=False)
+
+                # Match descriptors.
+                match_ = bf.knnMatch(des1,des2,k=2)
+                
+                # Sort them in the order of their distance.
+#                match_ = sorted(match_, key = lambda x:x.distance)
+                
+                for _match in match_:
+                    if _match and len(_match) ==2:
+                        m ,n = _match;
+                        if m.distance < ratio*n.distance:
+                            valid_match.append(m)
                     
 #                Printing and logging info
 #            logger.info('Image %s processed, took : %s sec per thread'
 #            %(os.path.basename(image),str(_time_taken)))
             
             _pair_logging.append({"Pair im" : pair_im,
-                                 "Total matches" : len(match),
+                                 "Total matches" : len(match_),
                                  "Valid matches" : len(valid_match),
-                                 "Inlier ratio" : len(valid_match)/len(match)})
+                                 "Inlier percentage" : round(float(len(valid_match))*100,2)/len(match_)})
             
 #           Appending matches data for saving 
             match_data.append([valid_match,[master_im,pair_im]])
@@ -315,7 +338,7 @@ def pool_match_feature():
     try:
         p = Pool(processes=thread,maxtasksperchild=1);
         match = list(p.imap_unordered(match_feature,imagepair))#,path_feature,path_output))
-        tojson(match,os.path.join(path_report, num2method(method)+ '_match_feature.json'))
+        tojson(match,os.path.join(path_report, method_feature+ '_match_feature.json'))
         p.close()
         
     except KeyboardInterrupt:
@@ -325,8 +348,6 @@ def pool_match_feature():
 def main():
     try:
         pool_match_feature()
-#        pool_match_feature()
-#        extract_feature(list_image)
     except KeyboardInterrupt:
 #        logger.fatal('KeyboardInterruption, Terminated')
         sys.exit('KeyboardInterruption, Terminated')

@@ -39,7 +39,7 @@ exifread is used to read exif data from images. to Install this type
 7. [Pyyaml](https://pyyaml.org/wiki/PyYAML)
 Pyyaml is a data serialization format designed to easy readability and interaction with python.
 
-8.[utm](https://github.com/Turbo87/utm)
+8. [utm](https://github.com/Turbo87/utm)
 Utm is used to convert coordinate system from geographic to projected and vice versa.
 
 ### Installing
@@ -87,6 +87,8 @@ of this function.
 **Results**
 Result of *exif.py* will be *exif.json* file and *imagepair.json*. *Exif.json* contains information about 
 position, time of capture, width, height etc of the image and *imagepair.json* contains neighbouring images name.
+
+
 For example - if number of neighbouring images is 9 then first name represents master image name and rest 9 images will be 
 the neighbours of the master images.
 
@@ -106,6 +108,22 @@ following methods
 5. [AKAZE](https://docs.opencv.org/3.0-beta/modules/features2d/doc/feature_detection_and_description.html)
 6. [Star and BRIEF](https://docs.opencv.org/3.0-beta/doc/py_tutorials/py_feature2d/py_brief/py_brief.html)
 
+4. **Match_feature.py**
+
+Match feature function is used to match extracted features from image pair. Image pair is obtained from *exif.py* function. There are two type of images master and pair images. Master image is the reference to which all the pair images will be matched. 
+
+There are 7 inputs which are required to run Matching process.
+1. *Input* directory containing extracted features
+2. *Output* directory where all the output will be stored. (Default) is output folder in current directory
+3. *Method*  that will be used to match features. Enter an integer value corresponding to options given below. Available methods are 1 -- ANN/BruteForce. ANN is used in case of SIFT and SURF features. BruteForce is used in case of Binary features. Other methods are not available yet.
+4. *Parameter* is used to calculate neighbour. Available methods are 1. Euclidian Distance/Hamming Distance 2. Other
+(Default) is Euclidian Distance is used for SIFT,SURF. Hamming is used for Binary decriptors. Other methods are not available yet.
+5. *Features* feature method that is used for matching 1 -- SIFT 2 -- SURF 3 -- ORB 4 -- BRISK 5 -- AKAZE 6 -- STAR+ BRIEF (Default) is SIFT
+6. *RATIO*, Define a ratio threshold for ratio test. (Default) is 0.8
+7. *THREAD*, Number of processing threads to be used for multiprocessing. (Default) Using all the threads available.
+
+
+
 
 ## Running the tests
 
@@ -116,7 +134,7 @@ First step would be to get exif information from those images and number of neig
 Let output folder be results directory and input be test_dataset.
 
 
-```python exif.py -i test_dataset/images -o output -n 9```
+```python exif.py -i ../../test_dataset/images -o output -n 9```
 
 
 To get help type ```python exif.py -h``` to get information about how to run it.
@@ -129,7 +147,7 @@ This output json file contains exif information like *Latitude, Longitude, Eleva
 extract feature using SIFT algorithm. So *m* would be 1. 
 
 
-``` python extract_feature.py -i test_dataset/images -o output -m 1```
+``` python extract_feature.py -i ../../test_dataset/images -o output -m 1```
 
 
 To get help type ```python extract_feature.py -h``` to get information about how to run it.
@@ -138,14 +156,31 @@ There are 6 methods available so *m* can vary from 1-6.
 Output folder with the name of method(here sift) will be created. **extract_feature.json** 
 will be created inside logging folder to get summary of the process.
 
+
+3. After extracting features next step is to match those features and then calculate fundamental matrix
+In this example we will use SIFT features, method of matching is ANN, Parameter for similarity is Euclidian distance, ratio is 0.8, and number of threads on maximum available.
+
+```python matching_feature.py -i ./output/ -o ./output/ -f 1```
+
+To get help type ```python matching_feature.py -h````
+In the output folder, matching_feature folder will be created. Data, logging, report are its subfolders containing matches, detail of individual image, and report for overall step respectively.
+
+
 ## To Do
 1. SFM
    - Features Extraction
+     * - [ ] Automatic Thresholding of different methods by assigning desired number of features
+     * - [ ] Saving features with image for visualization
+     * - [ ] Cluster Features extraction
      * - [ ] Setup GPU + CPU extraction
      * - [ ] Multi GPU support
-     * - [ ] Automatic Thresholding by assigning desired features
-     * - [ ] Saving features with image for visualization
 
+   - Features Matching
+     * - [ ] Find alternative to Brute Force in Binary features
+     * - [ ] Matching techniques like cascade Hashing
+     * - [ ] Consistency Checks in SIFT
+     * - [ ] GPU Matching
+     * - [ ] Cluster Feature Matching
 
 ### And coding style tests
 
