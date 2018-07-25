@@ -8,6 +8,28 @@ def checkdir(path):
     if not os.path.exists(path):
         os.makedirs(os.path.dirname(path))
         
+def pickle_keypoints(keypoints, descriptors,color):
+    i = 0
+    temp_array = []
+    for point in keypoints:
+        temp = (point.pt, point.size, point.angle, point.response, point.octave,
+        point.class_id, descriptors[i])     
+        i = i +1
+        temp_array.append(temp)
+    return [temp_array,[color]]
+
+def unpickle_keypoints(_array):
+    keypoints = []
+    descriptors = []
+    color = _array[1]
+    array = _array[0]
+    
+    for point in array:
+        temp_feature = cv2.KeyPoint(x=point[0][0],y=point[0][1],_size=point[1], _angle=point[2], _response=point[3], _octave=point[4], _class_id=point[5])
+        temp_descriptor = point[6]
+        keypoints.append(temp_feature)
+        descriptors.append(temp_descriptor)
+    return keypoints, np.array(descriptors),color
 
 def num2method(number):
     if number == 1:
@@ -49,117 +71,8 @@ def kp2xy(kp):
     point = np.array([(i.pt[0], i.pt[1]) for i in kp])
     x = point[:,0].round().astype(int)
     y = point[:,1].round().astype(int)
-    return [x,y]
-    
-import cv2
-import numpy as np
-import os
-import time
-import get_image
-import cPickle as pickle
-from src.context import parallel_map
-import sys
-import argparse
-import json 
-from src.dataset import pickle_keypoints
+    return x,y
 
-parser = argparse.ArgumentParser(description='See description below to see all available options')
-
-parser.add_argument('-i','--input',
-                    help='Input directory containing images. [Default] current directory',
-                    required=True)
-                    
-parser.add_argument('-o','--output',
-                    help='Output directory where all the output will be stored. [Default] output folder in current directory',
-                    default = './output/',
-                    required=False)
-                    
-parser.add_argument('-m','--method',type=int,
-                    help='Methods that will be used to calculate '+ 
-                    'detectors. Enter an integer value corresponding to options'+
-                    ' given below. Available methods are ' + 
-                    ' 1 -- SIFT ' +
-                    ' 2 -- SURF'  +
-                    ' 3 -- ORB'   +
-                    ' 4 -- BRISK' +
-                    ' 5 -- AKAZE' +
-                    ' 6 -- STAR+ BRIEF',
-                    default = 1,
-                    required=False)
-                                        
-parser.add_argument('-n','--numfeatures',type=int,
-                    help='This is used to limit number of features'+ 
-                    '.Enter an integer to restrict number of features.'+
-                    'This method is only available to SIFT and ORB.[Default] is not threshold given',
-                    default = 0,
-                    required=False)
-
-args = parser.parse_args()
-
-path_image = args.input;
-path_output = args.output;
-num_feature = args.numfeatures;
-method = args.method;
-
-print(num_feature)
-saving_feature = 'extract_feature'
-
-# Update path_output and output directories
-path_exif = os.path.join(path_output,'exif','data')
-path_output = os.path.join(path_output,saving_feature)       
-path_logging = os.path.join(path_output,'logging')
-path_report = os.path.join(path_output,'report')
-path_data = os.path.join(path_output,'data')
-
-#Updating path_data to path_feature
-path_feature = os.path.join(path_data,num2method(method));
-checkdir(path_feature)
-
-# Checking if path  exists, otherwise will be created
-checkdir(path_output)
-checkdir(path_logging)
-checkdir(path_report)
-checkdir(path_data)
-
-# Check if method > 5
-if method > 6 or method <1:
-    sys.exit('Invalid method selected. Only %s methods are available. See help to know how to use them '%(str(6)))
-
-
-#report_logging = './report/';
-#output_location = '/home/indshine-2/Downloads/Dimension/output/SFM/extract_feature/';
-#path_image = '/home/indshine-2/Downloads/Dimension/Data/test/'
-
-# Setup logging of function 
-#logging.basicConfig(format='%(asctime)s %(message)s',
-#                    filename= path_logging + '/extract_feature.log',
-#                    level=logging.DEBUG);
-
-#logger.info('Starting up logs')
-
-
-# Converting to realative path
-path_image = os.path.realpath(path_image)
-
-# Initialising Parameters
-count_feature = [];
-append_image = [];
-append_time = [];
-append_method = [];
-thread = 6;
-
-# Getting list of images present in given folder.
-list_image = get_image.list_image(path_image,path_logging);
-
-# Exit if no image was found
-if len(list_image) == 0:
-#    logger.fatal('No images were found in input folder')
-    sys.exit('No images were found in input folder')
-    
-# Exit if input path was not found
-if not os.path.exists(os.path.dirname(path_image)):
-#    logger.fatal('Input directory given was not found')
-    sys.exit('Input directory given was not found')
     
           
 def extract_feature(image):
@@ -279,39 +192,4 @@ def extract_feature(image):
   
 #       Returns list of images
     return features
-            
-def pool_extract_feature():
-    try:
-        features = list(parallel_map(extract_feature, list_image,thread))
-        tojson(features,os.path.join(path_report, (num2method(method) + '_extract_feature.json')))
-        
-    except KeyboardInterrupt:
-        sys.exit('KeyboardInterruption, Terminated')
-        pause()
-        
-def main():
-    try:
-        pool_extract_feature()
-
-    except KeyboardInterrupt:
-#        logger.fatal('KeyboardInterruption, Terminated')
-        sys.exit('KeyboardInterruption, Terminated')
-        pause()
-        
-if __name__ == '__main__':
-    try:
-        _start_time = time.time();
-        main()
-        _overall_time = time.time();
-        _time_taken_ = str(round(_overall_time - _start_time,1))
-        print('Total time taken %s secs'%(_time_taken_))
-#        logger.info('Total time taken is %s sec'%(_time_taken_))
-        
-    except KeyboardInterrupt:
-#        logger.fatal('Keyboard Interruption')
-        sys.exit('Interrupted by keyboard')
-        pause()
-        
-#Retrieve Keypoint Features
-#kp1, desc1 = unpickle_keypoints(keypoints_database)
 

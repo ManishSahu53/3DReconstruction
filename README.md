@@ -64,7 +64,7 @@ can cause some error.
 ### Functions available
 There are three function avaliable.
 
-1. **get_image.py**
+* **get_image.py**
 
 This function is used to get list of images present in the given folder. This is 
 used along with other function. To import get_image function simply type 
@@ -75,7 +75,7 @@ This will load the module. It further consists list_image
 function. list_image will take image directory and logging directory as inputs.
 It returns list of images present inside image directory.
 
-2. **exif.py**
+* **exif.py**
 
 Exif function is used to extract exif information from the images. Two inputs are 
 required - **Input directory** containing images and output directory of results.
@@ -92,12 +92,14 @@ position, time of capture, width, height etc of the image and *imagepair.json* c
 For example - if number of neighbouring images is 9 then first name represents master image name and rest 9 images will be 
 the neighbours of the master images.
 
-3. **extract_feature.py**
+* **extract_feature.py**
 
-Extract features function is used to extract features from images. There are 3 
-parameters available. Input directory, Output directory , 
-Method to use for feature extraction. Input directory will contain images,
-output folder will contain extracted features. 
+Extract features function is used to extract features from images. 
+There are 4 parameters available.
+1. *Input directory* - Input directory will contain images
+2. *Output directory* - output folder will contain extracted features
+3. *Method* - Method to use for feature extraction and number of features to be extracted. It is described below
+4. *Number of features* Enter number of features to be extracted. Number of features will take an integer generally around 40,000
 
 There are 6 **Methods** available to extract features. Type 1-6 digits to use 
 following methods
@@ -108,7 +110,7 @@ following methods
 5. [AKAZE](https://docs.opencv.org/3.0-beta/modules/features2d/doc/feature_detection_and_description.html)
 6. [Star and BRIEF](https://docs.opencv.org/3.0-beta/doc/py_tutorials/py_feature2d/py_brief/py_brief.html)
 
-4. **Match_feature.py**
+* **Match_feature.py**
 
 Match feature function is used to match extracted features from image pair. Image pair is obtained from *exif.py* function. There are two type of images master and pair images. Master image is the reference to which all the pair images will be matched. 
 
@@ -147,7 +149,7 @@ This output json file contains exif information like *Latitude, Longitude, Eleva
 extract feature using SIFT algorithm. So *m* would be 1. 
 
 
-``` python extract_feature.py -i ../../test_dataset/images -o output -m 1```
+``` python extract_feature.py -i ../../test_dataset/Images -o output -m 1```
 
 
 To get help type ```python extract_feature.py -h``` to get information about how to run it.
@@ -178,7 +180,7 @@ In the output folder, matching_feature folder will be created. Data, logging, re
    - Features Matching
      * - [ ] Find alternative to Brute Force in Binary features
      * - [ ] Matching techniques like cascade Hashing
-     * - [ ] Consistency Checks in SIFT
+     * - [ ] Consistency Checks for matching
      * - [ ] GPU Matching
      * - [ ] Cluster Feature Matching
 

@@ -1,3 +1,3 @@
-from . import get_image
-from . import extract_feature
+import get_image
+import extract_feature
 
