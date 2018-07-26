@@ -29,6 +29,7 @@ for i in uf:
 	p = uf\[i]\
 ```
 i = ('DJI_0088.JPG', 3435)
+
 p = ('DJI_0089.JPG', 1483)
 
 This means 88.JPG's feature_id number 2425 is matched with 99.JPG's feature_id number 1483.
@@ -39,17 +40,17 @@ This means 88.JPG's feature_id number 2425 is matched with 99.JPG's feature_id n
 // with key is p and value is i. This will append commnon points
 
 if p in sets: 
-	sets\[p]\.append(i)
+	sets[p].append(i)
 else:
-	sets\[p]\ = \[i]\
+	sets[p] = [i]
 ```
 This will append all the same features. Length of *sets\[p]\ will give us feature is seen in that many images.
 
-* **tracks** - In the SFM step we want to take features which are visible in \> 3\ images so that good triagulation is possible. So we need to filer out tracks whose length is \< 3\ . This 3 is a parameter, here it is taken to 4.
+* **tracks** - In the SFM step we want to take features which are visible in >3 images so that good triagulation is possible. So we need to filer out tracks whose length is greater than 3 . This 3 is a parameter, here it is taken to 4.
 
 * **tracks_graph** - A networkx graph is created for the tracks. There are 2 sets of nodes (Bipartite). 
 
-- Images
-- Track_ID
+* Images
+* Track_ID
 
 Node set 1 will match(edge connections) with Node set 2. For example - A image has number of features, and thus matches. These matches are converted into tracks. So each image has number of tracks (ID). So the graph represents this image and track_ID relationship. 
