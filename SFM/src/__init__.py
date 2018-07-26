@@ -6,6 +6,7 @@ import context
 import matching
 import track
 import dataset
+import csfm
 
 
 
