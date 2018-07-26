@@ -33,30 +33,90 @@ def load_features(path_output,method_feature):
                 f,d,c = dataset.unpickle_keypoints(file_name,path_feature)
                 pts = dataset.kp2xy(f)
                 feature[im] = pts
-                color[im] = c[0]
+                color[im] = c
                 
     return feature, color
         
 import networkx as nx
 from src import dataset
+from src.dataset import checkdir
 from src import track
-import yaml
-import os 
+from src.matching import num2method
+import os,sys,yaml,argparse
 import numpy as np
-import sys
+import time
+reload(track)
+import matplotlib.pyplot as plt
 
-image_lo = '/home/indshine-2/Downloads/Dimension/Dimension/test_dataset/Images'
-logging_lo = '/home/indshine-2/Downloads/Dimension/Dimension/SFM/extract_feature/output/exif/logging'
-path_output = '/home/indshine-2/Downloads/Dimension/Dimension/SFM/extract_feature/output'
+#parser = argparse.ArgumentParser(description='See description below to see all available options')
+#
+#parser.add_argument('-i','--input',
+#                    help='Output directory feature extraction step.',
+#                    required=True)
+#                    
+#parser.add_argument('-o','--output',
+#                    help='Output directory where all the output will be stored. [Default] output folder in current directory',
+#                    default = './output/',
+#                    required=False)
+#
+#parser.add_argument('-f','--feature',type=int,
+#                    help='feature method that is used for matching'+
+#                    ' 1 -- SIFT ' +
+#                    ' 2 -- SURF'  +
+#                    ' 3 -- ORB'   +
+#                    ' 4 -- BRISK' +
+#                    ' 5 -- AKAZE' +
+#                    ' 6 -- STAR+ BRIEF'+
+#                    ' [Default] is SIFT',
+#                    default = 1,
+#                    required=False)
+#                  
+#args = parser.parse_args()
+#
+#path_input = args.input;
+#path_output = args.output;
+#method_feature = num2method(args.feature); # SIFT,SURF,ORB etc
+
+path_input = './output'
+path_output = '/home/indshine-2/Downloads/Dimension/Dimension/SFM/output'
 method_feature = 'sift'
-file_exif,file_imagepair,_,_,_ = dataset.exif_lo(path_output)
 
+# Saving
+saving_matches = 'track'
+
+# Update path_output and output directories
+path_output = os.path.join(path_output,saving_matches)       
+path_logging = os.path.join(path_output,'logging') # Individual file record
+path_report = os.path.join(path_output,'report') # Summary of whole file
+path_data = os.path.join(path_output,'data',method_feature) # Any data to be saved
+
+# Checking if path  exists, otherwise will be created
+checkdir(path_output)
+checkdir(path_logging)
+checkdir(path_report)
+checkdir(path_data)
+
+file_exif,file_imagepair,_,_,_ = dataset.exif_lo(path_input)
+
+   
+# Cheching if exif.json and imagepair.json exists or not
+if os.path.isfile(file_exif):
+    print('exif.json found')
+else:
+    sys.exit('No exif.json found. extract_feature.py command first before running matching_feature.py')
+
+# Checking if imagepair.json exist or not
+if os.path.isfile(file_imagepair):
+    print('imagepair.json found')
+else:
+    sys.exit('No imagepair.json found. Run exif.py command first before running matching_feature.py')
+     
+    
 exif = yaml.safe_load(open(file_exif))
 imagepair = yaml.safe_load(open(file_imagepair))
 
-exif = exif['exif']
-no_im = len(exif)-1 # fist is header file
-G = nx.Graph()
+no_im = len(exif) 
+#G = nx.Graph()
 
 # Adding nodes
 #for im in range(no_im):
@@ -76,8 +136,15 @@ G = nx.Graph()
 ## Adding edges
 #nx.draw(G, with_labels=True, font_size=7)
 
+print('loading features ...')
+start_time = time.time()
+feature, color = load_features(path_input,method_feature)
+end_time = time.time()-start_time
+print('features loaded in %s secs'%(end_time))
 
-feature, color = load_features(path_output,method_feature)
-match = load_match(path_output,method_feature)
-track_graph = track.create_tracks_graph(feature,color,match)
-track.save_track_graph(track_graph)
+print('loading matches ...')
+match = load_match(path_input,method_feature)
+print('matches loaded')
+
+track_graph,_,tracks,uf = track.create_tracks_graph(feature,color,match)
+track.save_track_graph(track_graph,path_data)

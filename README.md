@@ -49,7 +49,8 @@ To install Dimension on your PC, simply clone this repository
 git clone https://gitlab.com/manish.indshine/Dimension.git
 git checkout develop
 ```
-and install dependencies mentoned above.
+and install dependencies mentoned below.
+To install simply type ```pip install -r requirements.txt``` or install manually as given below.
 ```
 pip install opencv-contrib-python
 pip install multiprocessing
@@ -57,6 +58,8 @@ pip install argparse
 pip install exifread
 pip install PyYAML
 pip install utm
+pip install loky
+pip install six
 ```
 Python 2.7 is used to develop so using python3 
 can cause some error.

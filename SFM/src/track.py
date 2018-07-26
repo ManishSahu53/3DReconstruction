@@ -2,12 +2,12 @@
 
 from unionfind import UnionFind
 import numpy as np
-
+import matplotlib.pyplot as plt
 import networkx as nx
 from collections import defaultdict
 from itertools import combinations
 from six import iteritems
-import io
+import io,os
 
         
 def save_track(fileobj, graph):
@@ -22,10 +22,9 @@ def save_track(fileobj, graph):
                     str(image), str(track), fid, x, y, r, g, b))
                     
 
-def save_track_graph(graph, filename=None):
-    with io.open( filename or 'tracks.csv', 'w', encoding='utf-8') as fout:
+def save_track_graph(graph, path_output):
+    with io.open( os.path.join(path_output,'track.csv'), 'w', encoding='utf-8') as fout:
         save_track(fout, graph)
-        
         
 def _good_track(track, min_length):
     if len(track) < min_length:
@@ -51,12 +50,12 @@ def create_tracks_graph(feature, colors, match):
         else:
             sets[p] = [i]
 
-    tracks = [t for t in sets.values() if _good_track(t, 3)] #5 is minimum track length
+    tracks = [t for t in sets.values() if _good_track(t, 4)] #A point must be visible in 4 images then only it will be added is minimum track length
     tracks_graph = nx.Graph()
     for track_id, track in enumerate(tracks):
         for image, featureid in track:
-#            if image not in feature:
-#                continue
+            if image not in feature:
+                continue
             x, y = feature[image][featureid]
             r, g, b = colors[image][featureid]
             tracks_graph.add_node(image, bipartite=0)
@@ -67,7 +66,7 @@ def create_tracks_graph(feature, colors, match):
                                   feature_id=featureid,
                                   feature_color=(float(r), float(g), float(b)))
 
-    return tracks_graph
+    return tracks_graph,sets,tracks,uf
 
 
 def tracks_and_images(graph):

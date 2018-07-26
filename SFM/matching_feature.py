@@ -2,113 +2,20 @@
 
 import logging
 reload(logging)
-  
-def checkdir(path):
-    if path[-1] != '/':
-        path = path  + '/'        
-    if not os.path.exists(path):
-        os.makedirs(os.path.dirname(path))
-        
-def pause():
-    programPause = raw_input("Press the <ENTER> key to continue...")
-    
-def tojson(dictA,file_json):
-    with open(file_json, 'w') as f:
-        json.dump(dictA, f,indent=4, separators=(',', ': '), ensure_ascii=False,encoding='utf-8')
-        
-
-def num2para(number):
-    if number == 1:
-        parameter_ = 'ANN/Hamming'
-    return parameter_
-
-def num2method(number):
-    if number == 1:
-        method_ = 'sift'
-    if number == 2:
-        method_ = 'surf'
-    if number == 3:
-        method_ = 'orb'
-    if number == 4:
-        method_ = 'brisk'
-    if number == 5:
-        method_ = 'akaze'
-    if number == 6:
-        method_ = 'StarBrief'
-    return method_
-
-def numfeature(path):
-    list_feature = []
-#    Searching of features
-    for root,dirs,files in os.walk(path):
-        if len(files) == 0:
-            sys.exit('No features found in "%s" directory'%(path))
-            break;
-        for file_name in files:
-            if file_name.endswith(('.npy','.NPY','Npy')):
-                list_feature.append((os.path.join(path,file_name)));
-    return len(list_feature)
-
-def _convert_match_to_vector(match):
-    """Convert Dmatch object to matrix form."""
-    match_vector = np.zeros((len(match), 2), dtype=np.int)
-    k = 0
-    for mm in match:
-        # mm.query will give index of mm match in keypoint detector.
-        # Example- kp1[mm.queryIdx].pt will give,
-        # x and y coordinate of image corresponding keypoint1
-    
-        match_vector[k, 0] = mm.queryIdx  # Train is master image                                         
-        match_vector[k, 1] = mm.trainIdx  # Query is pair image
-        k = k+1
-    return match,match_vector
-
-def robust_match_ratio_test(kp1,kp2,match,ratio):
-    valid_match = []
-    pts1 = []
-    pts2 = []
-    """Rejects matches based on popular lowe ratio test"""
-    for _k,(m,n) in enumerate(match):
-        if m.distance < ratio*n.distance:
-            valid_match.append(m)
-            pts1.append(kp1[m.queryIdx].pt) # Query is master image, Not sure
-            pts2.append(kp2[m.trainIdx].pt) # Train is pair  image, Not sure
-    return valid_match,np.asarray(pts1,dtype = np.int32),np.asarray(pts2,dtype = np.int32)
-    
-def robust_match_fundamental(pts1, pts2, valid_match):
-    """Filter matches by estimating the Fundamental matrix via RANSAC."""
-    if len(valid_match) < 8:
-        return np.array([])
-    FM_RANSAC = cv2.FM_RANSAC
-    F, mask = cv2.findFundamentalMat(pts1, pts2, FM_RANSAC)
-    index = mask.ravel() ==1
-    if F[2, 2] == 0.0:
-        return []
-    return list(compress(valid_match, index)),pts1[index],pts2[index]   
-
-def _convert_matches_to_vector(match):
-    """Convert Dmatch object to matrix form."""
-    match_vector = np.zeros((len(match), 2), dtype=np.int)
-    k = 0
-    for mm in match:
-        match_vector[k, 0] = mm.queryIdx
-        match_vector[k, 1] = mm.trainIdx
-        k = k+1
-    return match_vector
-
     
 import cv2
 import cPickle as pickle
 import multiprocessing 
 import sys,os
 import argparse
-import json, yaml
+import yaml
 import numpy as np
 import time 
-from itertools import compress
 from src.context import parallel_map
-from src.dataset import unpickle_keypoints
-
+from src.dataset import unpickle_keypoints,checkdir,tojson,pause
+from src.matching import dict2list,num2method,numfeature,num2para
+from src.matching import robust_match_ratio_test,_convert_match_to_vector,robust_match_fundamental
+import traceback
 
 parser = argparse.ArgumentParser(description='See description below to see all available options')
 
@@ -211,15 +118,14 @@ path_feature =os.path.join(path_input,'extract_feature','data',method_feature)
 file_exif = os.path.join(path_exif,'exif.json')
 file_imagepair = os.path.join(path_exif,'imagepair.json')
 
-
 # loading exif and image pairs details
 exif = yaml.safe_load(open(file_exif))
 imagepair = yaml.safe_load(open(file_imagepair))
-
+imagepair = dict2list(imagepair)
 
 # Number of feature and number of images should be same
 _num_feature = numfeature(path_feature)
-_num_image = len(imagepair)
+_num_image = len(exif.keys())
 _num_pair = len(imagepair[0])
 
 # If number of images is not equal to number of features extract.
@@ -249,11 +155,6 @@ if thread ==0:
 elif thread>multiprocessing.cpu_count():
     thread = multiprocessing.cpu_count();
     print('Number of threads assigned (%s) is greater than maximum available (%s)'%(thread,multiprocessing.cpu_count()))
-    
-#if args.feature == 1 or 2:
-#    similarity_matric = 'euclidian' # Non binary
-#else:
-#    similarity_matric = 'hamming' # For binary
   
 image = []
 valid_match_num = []
@@ -263,18 +164,16 @@ match_num = []
 match_report = []
 
 def match_feature(imagepair):#,path_feature,path_output):
-
     try:
         match_data = []
-#        for i in range(_num_image):
         _pair_logging = [];
         _start_time = time.time()
         master_im = imagepair[0];
+        print('Processing %s image'%(master_im))
         _match = {};
         for j in range(1,_num_pair):
             pair_im = imagepair[j];
             valid_match = []
-            
 #                Retrieve Keypoint Features
             kp1, des1, color = unpickle_keypoints(master_im,path_feature)
             kp2, des2, color = unpickle_keypoints(pair_im,path_feature)
@@ -297,7 +196,7 @@ def match_feature(imagepair):#,path_feature,path_output):
                 
 #                Robut fundamental outlier removal
                 valid_match,pts1,pts2 = robust_match_fundamental(pts1,pts2,valid_match)
-                match_index = np.array(_convert_matches_to_vector(valid_match),dtype=int)
+                match_index = np.array(_convert_match_to_vector(valid_match),dtype=int)
 
                 
             elif args.feature == 3 or args.feature == 4 or args.feature == 5 or args.feature == 6: # For binary descriptors, using hamming distance
@@ -312,11 +211,7 @@ def match_feature(imagepair):#,path_feature,path_output):
                 
 #                Robut fundamental outlier removal
                 valid_match,pts1,pts2 = robust_match_fundamental(pts1,pts2,valid_match)
-                match_index = np.array(_convert_matches_to_vector(valid_match),dtype = int)
-
-#                Printing and logging info
-#            logger.info('Image %s processed, took : %s sec per thread'
-#            %(os.path.basename(image),str(_time_taken)))
+                match_index = np.array(_convert_match_to_vector(valid_match),dtype = int)
             
             _pair_logging.append({"Pair im" : pair_im,
                                  "Total matches" : len(match_),
@@ -328,13 +223,11 @@ def match_feature(imagepair):#,path_feature,path_output):
             _match[pair_im] = match_index
             
 #         Updating path_data to path_feature
-        print(master_im)
         path_match = os.path.join(path_data,method_feature);
         checkdir(path_match)
-        
+
 #         Saving features as numpy compressed array
         path_match = os.path.join(path_match, os.path.splitext(os.path.basename(master_im))[0])
-#        np.save(path_match,match_data)_match
         np.save(path_match,_match)
         
         _end_time = time.time()
@@ -342,26 +235,26 @@ def match_feature(imagepair):#,path_feature,path_output):
         
 
         _master_logging = {"Master Image" : master_im,
-                "Pair Images" : _pair_logging,
-                "Features extraction method" : method_feature,
-                "Threshold Ration" : ratio,
-                "Similarity matric" : num2para(parameter),
-                "Time" : _time_taken};
+                            "Pair Images" : _pair_logging,
+                            "Features extraction method" : method_feature,
+                            "Threshold Ration" : ratio,
+                            "Similarity matric" : num2para(parameter),
+                            "Time" : _time_taken};
                 
 #         Saving corresponding matches of master image to file 
         tojson(_master_logging,os.path.join(path_logging,os.path.splitext(os.path.basename(master_im))[0] + '.json'))
    
         match_report.append(_master_logging)
            
-    except KeyboardInterrupt:
+    except Exception or KeyboardInterrupt :
 #        logger.fatal('KeyboardInterruption, Terminated')
-        sys.exit('KeyboardInterruption, Terminated')
-        pause()
+        traceback.print_exc()
+        sys.exit('Interruption in parallel processing, Terminated')
     return match_report
     
 def pool_match_feature():
     try:
-        match = list(parallel_map(match_feature,imagepair,thread))#,path_feature,path_output))
+        match = list(parallel_map(match_feature,imagepair,thread))
         tojson(match,os.path.join(path_report, method_feature+ '_match_feature.json'))
         
     except KeyboardInterrupt:
@@ -390,6 +283,3 @@ if __name__ == '__main__':
         sys.exit('Interrupted by keyboard')
         pause()
         
-#Retrieve Keypoint Features
-#keypoints_database = pickle.load( open( "keypoints_database.mansift", "rb" ) )
-#kp1, desc1, color = unpickle_keypoints(keypoints_database)

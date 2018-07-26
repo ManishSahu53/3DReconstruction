@@ -1,0 +1,10 @@
+exifread
+networkx
+numpy
+utm
+PyYAML
+six
+loky==1.2.1
+multiprocessing
+opencv-contrib-python
+

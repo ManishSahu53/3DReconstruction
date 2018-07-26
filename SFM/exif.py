@@ -59,8 +59,8 @@ def get_neighbour(coord,list_coord,num_neighbour):
     
     # First element will always be the image itself as distance will be zero
     # with respect to self. So adding [neighbour+1] to get the 
-    for j in range(num_neighbour+1):
-        neighbour_image.append(list_coord[2][neighbour_dist.index(sorted_dist[j])]);
+    for j in range(num_neighbour):
+        neighbour_image.append(list_coord[2][neighbour_dist.index(sorted_dist[j+1])]);
     return neighbour_image
     
     
@@ -136,8 +136,7 @@ def exif(path_image,path_logging):
     #    logger.fatal('No images were found in input folder')
         sys.exit('No images were found in %s folder'%(path_image))
         
-    data=[];
-    data.append(["Image","Lat","Long","Elevation","Focal length in mm", "Width(px)","Height(px)","Capture Time"])
+    data={};
 
 #    Looping all over images
     for file_ in list_image_:
@@ -153,13 +152,12 @@ def exif(path_image,path_logging):
         width = tags["EXIF ExifImageWidth"].values[0];
         capture_time = str(tags["EXIF DateTimeOriginal"])
         focal = float(tags["EXIF FocalLength"].values[0].num)/tags["EXIF FocalLength"].values[0].den
-        data.append([os.path.basename(file_),lat,long,ele,focal,width,height,capture_time]);
-        
-#     Creating a dictionary
-    Coordinate = {"exif": data}
-                  
+
+#        Creating a dictionary
+        data[os.path.basename(file_)] = {'lat':lat, 'long':long, 'ele':ele, 'focal':focal, 'width':width, 'height':height, 'time':capture_time}
+    
 #     Saving dictionary to json file
-    tojson(Coordinate,os.path.join(path_data, 'exif.json'))
+    tojson(data,os.path.join(path_data, 'exif.json'))
     print('Extracted Exif details. Data saved to %s'%(os.path.join(path_data,'exif.json')))
     return path_data
     
@@ -175,21 +173,19 @@ def image_pair(path_exif,path_imagepair):
     _lat =  [];
     _long = [];
     image = [];
-    neighbour = [];
+    neighbour = {};
     
 #    Extracting coordinates
     
-    for i in range(1,len(exif_data["exif"])):
-        _lat.append(exif_data["exif"][i][1]);
-        _long.append(exif_data["exif"][i][2]);
-        image.append(exif_data["exif"][i][0]);
-    
-#    pairs = {im: [] for im in image}
-    
+    for im in exif_data.keys(): 
+        _lat.append(exif_data[im]['lat']);
+        _long.append(exif_data[im]['long']);
+        image.append(im);
+            
 #    Getting neighbouring images    
-    for j in range(len(_lat)):
-        neighbour.append(get_neighbour([_lat[j],_long[j],image[j]],[_lat,_long,image],num_neighbour))
-#         pairs[image[j]].append(get_neighbour([_lat[j],_long[j],image[j]],[_lat,_long,image],num_neighbour))
+    for im in exif_data.keys():
+        neighbour[im] = get_neighbour([exif_data[im]['lat'],exif_data[im]['long'],im],[_lat,_long,image],num_neighbour)
+
 #    Saving data to json format
     tojson(neighbour,os.path.join(path_data, 'imagepair.json'))
     print("Calculated neighbouring images. Data saved to %s"%(os.path.join(path_data, 'imagepair.json')))

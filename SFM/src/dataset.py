@@ -2,7 +2,7 @@
 
 import os 
 import numpy as np
-import cv2
+import cv2,json
 import cPickle as pickle
 
 def kp2xy(kp):
@@ -114,3 +114,9 @@ def load_match(file_match):
     match = np.load(open(file_match)).item()
     return match
 
+def tojson(dictA,file_json):
+    with open(file_json, 'w') as f:
+        json.dump(dictA, f,indent=4, separators=(',', ': '), ensure_ascii=False,encoding='utf-8')
+        
+def pause():
+    programPause = raw_input("Press the <ENTER> key to continue...")
