@@ -35,7 +35,7 @@ p = ('DJI_0089.JPG', 1483)
 This means 88.JPG's feature_id number 2425 is matched with 99.JPG's feature_id number 1483.
 
 * **sets** -  set is also a dictionary where key is p and value is i. 
-```
+
 // If p feature already exist then append else create a dict with key is p and value is i. This will append commnon points
 
 if p in sets: 
@@ -43,7 +43,6 @@ if p in sets:
 else:
 	sets(p) = (i)
 
-```
 
 This will append all the same features. Length of *sets\[p]\ will give us feature is seen in that many images.
 
