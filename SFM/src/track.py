@@ -35,7 +35,7 @@ def _good_track(track, min_length):
     return True
 
 
-def create_tracks_graph(feature, colors, match):
+def create_tracks_graph(feature, colors, match , min_len):
     """Link matches into tracks."""
     uf = UnionFind()
     for im1, im2 in match:
@@ -50,7 +50,7 @@ def create_tracks_graph(feature, colors, match):
         else:
             sets[p] = [i]
 
-    tracks = [t for t in sets.values() if _good_track(t, 4)] #A point must be visible in 4 images then only it will be added is minimum track length
+    tracks = [t for t in sets.values() if _good_track(t, min_len)] #A point must be visible in 4 images then only it will be added is minimum track length
     tracks_graph = nx.Graph()
     for track_id, track in enumerate(tracks):
         for image, featureid in track:
@@ -135,3 +135,18 @@ def all_common_tracks(graph, tracks, include_features=True, min_common=50):
         else:
             common_tracks[im1, im2] = v
     return common_tracks
+    
+def load_track_graph(filename):
+    fileobj = open(filename)
+    
+    t = nx.Graph()
+    for line in fileobj:
+        image, track, observation, x, y, R, G, B = line.split('\t')
+        t.add_node(image, bipartite=0)
+        t.add_node(track, bipartite=1)
+        t.add_edge(
+            image, track,
+            feature=(float(x), float(y)),
+            feature_id=int(observation),
+            feature_color=(float(R), float(G), float(B)))
+    return t

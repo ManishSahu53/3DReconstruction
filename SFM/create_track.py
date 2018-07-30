@@ -95,7 +95,7 @@ checkdir(path_logging)
 checkdir(path_report)
 checkdir(path_data)
 
-file_exif,file_imagepair,_,_,_ = dataset.exif_lo(path_input)
+file_exif,file_imagepair,file_camera_model,_,_,_ = dataset.exif_lo(path_input)
 
    
 # Cheching if exif.json and imagepair.json exists or not
@@ -144,6 +144,6 @@ print('features loaded in %s secs'%(end_time))
 print('loading matches ...')
 match = load_match(path_input,method_feature)
 print('matches loaded')
-
-track_graph,_,tracks,uf = track.create_tracks_graph(feature,color,match)
+min_track_len = 4
+track_graph,_,tracks,uf = track.create_tracks_graph(feature,color,match, min_track_len)
 track.save_track_graph(track_graph,path_data)

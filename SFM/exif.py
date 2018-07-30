@@ -1,81 +1,12 @@
 """ Extracting Exif information from the images"""
-
-# Checking if directory exist
-def checkdir(path):
-    if path[-1] != '/':
-        path = path  + '/'        
-    if not os.path.exists(path):
-        os.makedirs(os.path.dirname(path))
-        
-# Saving to json format
-def tojson(dictA,file_json):
-    with open(file_json , 'w') as f:
-        json.dump(dictA, f,indent=4, separators=(',', ': '), ensure_ascii=False,encoding='utf-8')     
-
-def eval_frac(value):
-    try:
-        return float(value.num) / float(value.den)
-    except ZeroDivisionError:
-        return None
-        
-def gps_to_decimal(values, reference):
-    sign = 1 if reference in 'NE' else -1
-    degrees = eval_frac(values[0])
-    minutes = eval_frac(values[1])
-    seconds = eval_frac(values[2])
-    return  sign*(degrees + minutes / 60 + seconds / 3600)
-    
-# For converting projected to geographic coordinate system
-def xy2latlong(easting,northing,zone,hemi):
-    lat,long = utm.to_latlon( easting,northing,zone,hemi);
-    return lat,long
-
-# For converting geographic to projected coordinate system
-def latlong2utm(lat,long):
-        coord = utm.from_latlon(lat, long);
-        easting =  coord[0];
-        northing = coord[1];
-        zone = coord[2];
-        hemi = coord[3];
-        return easting,northing,zone,hemi
-        
-def distance(lat1,long1,lat2,long2):
-    easting1,northing1,zone1,hemi1 = latlong2utm(lat1,long1)
-    easting2,northing2,zone2,hemi2 = latlong2utm(lat2,long2)
-    return math.sqrt((easting1-easting2)**2 + (northing1-northing2)**2)
-
-def get_neighbour(coord,list_coord,num_neighbour):
-    # coord = [ lat[0],long[0],image[0]]
-    # list_coord = [lat,long,image]
-    neighbour_dist =[];
-    sorted_dist = [];
-    neighbour_image =[];
-    
-    for i in range(len(list_coord[0])):
-        dist = distance(coord[0],coord[1],list_coord[0][i],list_coord[1][i])
-        neighbour_dist.append(dist)
-        sorted_dist.append(dist)
-    sorted_dist.sort(key=float)
-    
-    # First element will always be the image itself as distance will be zero
-    # with respect to self. So adding [neighbour+1] to get the 
-    for j in range(num_neighbour):
-        neighbour_image.append(list_coord[2][neighbour_dist.index(sorted_dist[j+1])]);
-    return neighbour_image
-    
-    
        
 import exifread
-import get_image
-import math
-#import logging
-#reload(logging)
-import json
+from src import get_image
 import os
 import yaml
 import sys
 import argparse
-import utm
+from src.exif import get_neighbour,gps_to_decimal,eval_frac,tojson,checkdir
 
 parser = argparse.ArgumentParser(description='See description below to see all available options')
 
@@ -94,20 +25,18 @@ parser.add_argument('-n','--neighbour',
                     default = 9,
                     required=False)
                     
-                    
 args = parser.parse_args()   
 path_image = args.input;
 path_output = args.output;
 num_neighbour = args.neighbour;
-
+path_sensor = './sensor'
+file_sensor = os.path.join(path_sensor,'sensor_data.json')
+path_camera = os.path.join(path_image,'camera.json')
 
 #path_image = '/home/indshine-2/Downloads/Dimension/Data/test/'
 #file_json = '/home/indshine-2/Downloads/Dimension/output/SFM/exif/exif.json'
 
-#logging.basicConfig(format='%(asctime)s %(message)s',
-#                    filename= path_logging + '/exif.log',
-#                    level=logging.DEBUG);
-   
+  
 # Converting to realative path
 path_image = os.path.realpath(path_image)
 saving_folder = 'exif'
@@ -126,10 +55,16 @@ checkdir(path_data);
 if not os.path.exists(os.path.dirname(path_image)):
 #    logging.fatal('Input directory given was not found')
     sys.exit('Input directory given was not found')
-        
+
+if not os.path.isfile(file_sensor):
+    sys.exit('Sensor Width information file at %s path doesnt exist'%(path_sensor))
+
+if not os.path.isfile(path_camera):
+    sys.exit('Camera model(distortion) information file %s doesnt exist'%(path_camera))
        
 def exif(path_image,path_logging):
     list_image_ = get_image.list_image(path_image,path_logging);
+    model_camera = yaml.safe_load(open(path_camera))
     
     # Exit if no image was found
     if len(list_image_) == 0:
@@ -137,12 +72,14 @@ def exif(path_image,path_logging):
         sys.exit('No images were found in %s folder'%(path_image))
         
     data={};
-
+    sensors_width = yaml.safe_load(open(file_sensor))
+    
 #    Looping all over images
     for file_ in list_image_:
         f = open(file_, 'rb');
 #        jpeg = pexif.JpegFile.fromFile(file_);
         tags = exifread.process_file(f,details=False)
+        camera = tags['Image Model'].values
         ref_lat =  tags['GPS GPSLatitudeRef'].values
         ref_long = tags['GPS GPSLongitudeRef'].values 
         lat = gps_to_decimal(tags["GPS GPSLatitude"].values,ref_lat)
@@ -152,12 +89,21 @@ def exif(path_image,path_logging):
         width = tags["EXIF ExifImageWidth"].values[0];
         capture_time = str(tags["EXIF DateTimeOriginal"])
         focal = float(tags["EXIF FocalLength"].values[0].num)/tags["EXIF FocalLength"].values[0].den
-
+        
+#         Checking for sensor width data
+        try:    
+            sensor_width = sensors_width[camera]
+        except KeyError:
+            sys.exit('Camera (%s) sensor width information is not present. Add width information then continue'%(camera))
+        
 #        Creating a dictionary
-        data[os.path.basename(file_)] = {'lat':lat, 'long':long, 'ele':ele, 'focal':focal, 'width':width, 'height':height, 'time':capture_time}
+        data[os.path.basename(file_)] = {'camera':camera, 'lat':lat,
+             'long':long, 'ele':ele, 'focal':focal, 'sensor_width':sensor_width,
+             'width':width, 'height':height, 'time':capture_time}
     
 #     Saving dictionary to json file
     tojson(data,os.path.join(path_data, 'exif.json'))
+    tojson(model_camera,os.path.join(path_data,'camera.json'))
     print('Extracted Exif details. Data saved to %s'%(os.path.join(path_data,'exif.json')))
     return path_data
     
@@ -176,7 +122,6 @@ def image_pair(path_exif,path_imagepair):
     neighbour = {};
     
 #    Extracting coordinates
-    
     for im in exif_data.keys(): 
         _lat.append(exif_data[im]['lat']);
         _long.append(exif_data[im]['long']);

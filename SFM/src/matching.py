@@ -82,3 +82,4 @@ def robust_match_fundamental(pts1, pts2, valid_match):
     if F[2, 2] == 0.0:
         return []
     return list(compress(valid_match, index)),pts1[index],pts2[index]
+    

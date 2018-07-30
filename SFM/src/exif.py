@@ -1,4 +1,5 @@
 """ Extracting Exif information from the images"""
+import os,json,utm,math
 
 # Checking if directory exist
 def checkdir(path):
@@ -62,32 +63,3 @@ def get_neighbour(coord,list_coord,num_neighbour):
     for j in range(num_neighbour+1):
         neighbour_image.append(list_coord[2][neighbour_dist.index(sorted_dist[j])]);
     return neighbour_image
-    
-  
-def image_pair(path_exif,path_imagepair):
-    
-#    Loading saved json file
-    exif_data = yaml.safe_load(open(os.path.join(path_exif,'exif.json')))
-    
-#    Initializing variables
-    _lat =  [];
-    _long = [];
-    image = [];
-    neighbour = [];
-    
-#    Extracting coordinates
-    
-    for i in range(1,len(exif_data["Exif"])):
-        _lat.append(exif_data["Exif"][i][1]);
-        _long.append(exif_data["Exif"][i][2]);
-        image.append(exif_data["Exif"][i][0]);
-    
-#    pairs = {im: [] for im in image}
-    
-#    Getting neighbouring images    
-    for j in range(len(_lat)):
-        neighbour.append(get_neighbour([_lat[j],_long[j],image[j]],[_lat,_long,image],num_neighbour))
-#         pairs[image[j]].append(get_neighbour([_lat[j],_long[j],image[j]],[_lat,_long,image],num_neighbour))
-#    Saving data to json format
-    tojson(neighbour,os.path.join(path_data, 'imagepair.json'))
-    print("Calculated neighbouring images. Data saved to %s"%(os.path.join(path_data, 'imagepair.json')))
