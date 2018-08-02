@@ -87,7 +87,7 @@ will be created automatically and all the results will be save there. By default
 a logging folder will be created inside current directory, this will keep the logs 
 of this function.
 
-**Results**
+* **Results**
 Result of *exif.py* will be *exif.json* file and *imagepair.json*. *Exif.json* contains information about 
 position, time of capture, width, height etc of the image and *imagepair.json* contains neighbouring images name.
 
@@ -112,6 +112,7 @@ following methods
 4. [BRISK](https://docs.opencv.org/3.0-beta/modules/features2d/doc/feature_detection_and_description.html)
 5. [AKAZE](https://docs.opencv.org/3.0-beta/modules/features2d/doc/feature_detection_and_description.html)
 6. [Star and BRIEF](https://docs.opencv.org/3.0-beta/doc/py_tutorials/py_feature2d/py_brief/py_brief.html)
+
 
 * **Match_feature.py**
 

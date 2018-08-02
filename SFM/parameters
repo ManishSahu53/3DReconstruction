@@ -1,0 +1,17 @@
+1. 0.004	Outlier threshold (in pixels) for essential matrix estimation #data.config['five_point_algo_threshold']	incremental_ba.py	Threshold
+2. min_len,(4)	track.py	minimum track length
+3. 0.004	data.config['five_point_algo_threshold']	incremental_ba.py	Threshold
+4. min_inliers	data.config['five_point_algo_min_inliers']	incremental_ba.py	Inliers count
+5. processes 	16
+6. triangulation_threshold	0.006
+7. triangulation_min_ray_angle	1
+8. config['exif_focal_sd'],
+9. config['principal_point_sd'],
+10.config['radial_distorsion_k1_sd'],
+11.config['radial_distorsion_k2_sd'],
+12. config['radial_distorsion_p1_sd'],
+13. config['radial_distorsion_p2_sd'],
+14. config['radial_distorsion_k3_sd'])
+15. triangulation_threshold	0.006
+16. triangulation_min_ray_angle		1
+17. 

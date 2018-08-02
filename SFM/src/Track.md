@@ -26,7 +26,7 @@ The tracks are stored in the tracks.csv file. It has 8 columns.
 
 ```
 for i in uf:
-	p = uf\[i]\
+	p = uf[i]
 ```
 i = ('DJI_0088.JPG', 3435)
 
@@ -37,7 +37,7 @@ This means 88.JPG's feature_id number 2425 is matched with 99.JPG's feature_id n
 * **sets** -  set is also a dictionary where key is p and value is i. 
 
 ```
-// If p feature already exist then append else create a dict with key is p and value is i. This will append commnon points
+If p feature already exist then append else create a dict with key is p and value is i. This will append commnon points
 
 if p in sets: 
 	sets(p).append(i)

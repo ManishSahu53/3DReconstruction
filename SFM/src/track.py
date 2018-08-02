@@ -7,9 +7,11 @@ import networkx as nx
 from collections import defaultdict
 from itertools import combinations
 from six import iteritems
-import io,os
+import io
+import os
+import sys
 
-        
+
 def save_track(fileobj, graph):
     for node, data in graph.nodes(data=True):
         if data['bipartite'] == 0:
@@ -20,12 +22,13 @@ def save_track(fileobj, graph):
                 r, g, b = data['feature_color']
                 fileobj.write(u'%s\t%s\t%d\t%g\t%g\t%g\t%g\t%g\n' % (
                     str(image), str(track), fid, x, y, r, g, b))
-                    
+
 
 def save_track_graph(graph, path_output):
-    with io.open( os.path.join(path_output,'track.csv'), 'w', encoding='utf-8') as fout:
+    with io.open(os.path.join(path_output, 'track.csv'), 'w', encoding='utf-8') as fout:
         save_track(fout, graph)
-        
+
+
 def _good_track(track, min_length):
     if len(track) < min_length:
         return False
@@ -35,7 +38,7 @@ def _good_track(track, min_length):
     return True
 
 
-def create_tracks_graph(feature, colors, match , min_len):
+def create_tracks_graph(feature, colors, match, min_len):
     """Link matches into tracks."""
     uf = UnionFind()
     for im1, im2 in match:
@@ -50,7 +53,8 @@ def create_tracks_graph(feature, colors, match , min_len):
         else:
             sets[p] = [i]
 
-    tracks = [t for t in sets.values() if _good_track(t, min_len)] #A point must be visible in 4 images then only it will be added is minimum track length
+    # A point must be visible in 4 images then only it will be added is minimum track length
+    tracks = [t for t in sets.values() if _good_track(t, min_len)]
     tracks_graph = nx.Graph()
     for track_id, track in enumerate(tracks):
         for image, featureid in track:
@@ -66,7 +70,7 @@ def create_tracks_graph(feature, colors, match , min_len):
                                   feature_id=featureid,
                                   feature_color=(float(r), float(g), float(b)))
 
-    return tracks_graph,sets,tracks,uf
+    return tracks_graph, sets, tracks, uf
 
 
 def tracks_and_images(graph):
@@ -135,10 +139,11 @@ def all_common_tracks(graph, tracks, include_features=True, min_common=50):
         else:
             common_tracks[im1, im2] = v
     return common_tracks
-    
+
+
 def load_track_graph(filename):
     fileobj = open(filename)
-    
+
     t = nx.Graph()
     for line in fileobj:
         image, track, observation, x, y, R, G, B = line.split('\t')
