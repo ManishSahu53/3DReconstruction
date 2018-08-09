@@ -41,6 +41,20 @@ def num2method(number):
         method_ = 'StarBrief'
     return method_
 
+def method2num(method_):
+    if method_ == 'sift':
+        number = 1
+    if method_ == 'surf':
+        number = 2
+    if method_ == 'orb':
+        number = 3
+    if method_ == 'brisk':
+        number = 4
+    if method_ == 'akaze':
+        number = 5
+    if method_ == 'starbrief':
+        number = 6
+    return number
 
 def numfeature(path):
     list_feature = []

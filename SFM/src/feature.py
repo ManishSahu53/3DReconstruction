@@ -56,6 +56,20 @@ def num2method(number):
         method_ = 'StarBrief'
     return method_
 
+def method2num(method):
+    if method == 'sift':
+        number = 1
+    if method == 'surf':
+        number = 2
+    if method == 'orb':
+        number = 3
+    if method == 'brisk':
+        number = 4
+    if method == 'akaze':
+        number = 5
+    if method == 'starbrief':
+        number = 6
+    return number
 
 def pause():
     programPause = raw_input("Press the <ENTER> key to continue...")
@@ -102,3 +116,5 @@ def denormalized_image_coordinates(norm_coords, width, height):
     p[:, 0] = norm_coords[:, 0] * size - 0.5 + width / 2.0
     p[:, 1] = norm_coords[:, 1] * size - 0.5 + height / 2.0
     return p
+    
+

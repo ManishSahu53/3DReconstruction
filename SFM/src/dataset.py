@@ -107,7 +107,7 @@ def feature_lo(path_output, method_feature):
     path_output = os.path.join(path_output, saving_feature)
     path_logging = os.path.join(path_output, 'logging')
     path_report = os.path.join(path_output, 'report')
-    path_data = os.path.join(path_output, 'data', method_feature)
+    path_data = os.path.join(path_output, 'data',method_feature)
 
     # Checking if path  exists, otherwise will be created
     checkdir(path_output)
@@ -460,9 +460,10 @@ def reconstructions_to_json(reconstructions):
 
 
 def save_reconstruction(reconstruction, path_output, minify=False):
+    reconstruct = reconstructions_to_json(reconstruction)
     with io.open(os.path.join(path_output, 'reconstruction.json'), 'w', encoding='utf-8') as fout:
-        json_dump(reconstructions_to_json(reconstruction), fout, minify)
-
+        json_dump(reconstruct, fout, minify)
+    return reconstruct
 
 def load_reconstruction(path_output):
     with open(os.path.join(path_output, 'reconstruction.json')) as fin:

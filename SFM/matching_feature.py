@@ -13,8 +13,8 @@ import yaml
 import numpy as np
 import time
 from src.context import parallel_map
-from src.dataset import unpickle_keypoints, checkdir, tojson, pause, para_lo
-from src.matching import dict2list, num2method, numfeature, num2para
+from src.dataset import unpickle_keypoints, checkdir, tojson, pause, para_lo, feature_lo, exif_lo
+from src.matching import dict2list, method2num, numfeature, num2para
 from src.matching import robust_match_ratio_test, _convert_match_to_vector, robust_match_fundamental
 import traceback
 
@@ -22,47 +22,12 @@ parser = argparse.ArgumentParser(
     description='See description below to see all available options')
 
 parser.add_argument('-i', '--input',
-                    help='Output directory feature extraction step.',
+                    help='Input directory of images.',
                     required=True)
 
 parser.add_argument('-o', '--output',
                     help='Output directory where all the output will be stored. [Default] output folder in current directory',
                     default='./output/',
-                    required=False)
-
-parser.add_argument('-m', '--method', type=int,
-                    help='Methods that will be used to match ' +
-                    'features. Enter an integer value corresponding to options' +
-                    ' given below. Available methods are ' +
-                    ' 1 -- ANN ' +
-                    ' 2 -- BruteForce' +
-                    ' [Default] is Approximate Nearest Neighbour (ANN)',
-                    default=1,
-                    required=False)
-
-parser.add_argument('-p', '--parameter', type=int,
-                    help='Paramter used to calculate neighbour. Available methods are' +
-                    ' 1 -- Euclidian Distance/Hamming Distance' +
-                    ' 2 -- Other' +
-                    ' [Default] Euclidian Distance is used for SIFT,SURF. Hamming is used for Binary decriptors',
-                    default=1,
-                    required=False)
-
-parser.add_argument('-f', '--feature', type=int,
-                    help='feature method that is used for matching' +
-                    ' 1 -- SIFT ' +
-                    ' 2 -- SURF' +
-                    ' 3 -- ORB' +
-                    ' 4 -- BRISK' +
-                    ' 5 -- AKAZE' +
-                    ' 6 -- STAR+ BRIEF' +
-                    ' [Default] is SIFT',
-                    default=1,
-                    required=False)
-
-parser.add_argument('-r', '--ratio', type=float,
-                    help='Define a ratio threshold for ratio test',
-                    default=0.8,
                     required=False)
 
 parser.add_argument('-t', '--thread', type=int,
@@ -83,16 +48,12 @@ args = parser.parse_args()
 
 path_input = args.input
 path_output = args.output
-parameter = args.parameter  # Hamming and Euclidian distance
-method = args.method  # ANN and Hamming
-ratio = args.ratio
 thread = args.thread
-method_feature = num2method(args.feature)  # SIFT,SURF,ORB etc
 
 
 #path_input = './output/'
 #path_output = './output/'
-#parameter = 1
+#para = 1
 #method = 1
 #ratio = 0.8
 #method_feature = num2method(1)
@@ -113,29 +74,39 @@ checkdir(path_logging)
 checkdir(path_report)
 checkdir(path_data)
 
+
+# reading parameters values 
+file_para = para_lo(args.output)
+
+para = yaml.safe_load(open(file_para))
+ratio = para['lowe_ratio']
+method_feature = para['feature_extractor']
+num_feature = method2num(method_feature) 
+method = para['matcher_type']
+
 # Finding exif folder containing exif, imagepair, descriptors
-path_exif = os.path.join(path_input, 'exif', 'data')
-path_feature = os.path.join(
-    path_input, 'extract_feature', 'data', method_feature)
+path_exif = exif_lo(args.output)
+path_feature = feature_lo(args.output,method_feature)
 
 # Json files
-file_exif = os.path.join(path_exif, 'exif.json')
-file_imagepair = os.path.join(path_exif, 'imagepair.json')
-file_para = para_lo(args.output)
+file_exif = path_exif[0]
+file_imagepair = path_exif[1]
+
 
 # loading exif and image pairs details
 exif = yaml.safe_load(open(file_exif))
 imagepair = yaml.safe_load(open(file_imagepair))
 imagepair = dict2list(imagepair)
-parameter = yaml.safe_load(para_lo)
+
 
 # Number of feature and number of images should be same
-_num_feature = numfeature(path_feature)
+_num_feature = numfeature(path_feature[0])
 _num_image = len(exif.keys())
 _num_pair = len(imagepair[0])
 
 # If number of images is not equal to number of features extract.
 if _num_feature != _num_image:
+    print('Number of features: %s and number of images: %s'%(_num_feature,_num_image))
     sys.exit('Number of features and number of images are not same. Check if features extract ran properly')
 
 # Cheching if sift_extract_feature.json and imagepair.json exists or not
@@ -152,9 +123,6 @@ else:
     sys.exit(
         'No imagepair.json found. Run exif.py command first before running matching_feature.py')
 
-# Allowing only euclidian/hamming distance to be used
-if parameter != 1:
-    sys.exit('Other matching matrices not implemented. Use Euclidian/hamming distance')
 
 # Number of threads to maximum if not assigned any.
 if thread == 0:
@@ -191,13 +159,13 @@ def match_feature(imagepair):  # ,path_feature,path_output):
                 continue
             valid_match = []
 #                Retrieve Keypoint Features
-            kp1, des1, color = unpickle_keypoints(master_im, path_feature)
-            kp2, des2, color = unpickle_keypoints(pair_im, path_feature)
+            kp1, des1, color = unpickle_keypoints(master_im, path_feature[0])
+            kp2, des2, color = unpickle_keypoints(pair_im, path_feature[0])
 
 #            Changing matching method for SIFT/SURF and Binary features.
 #            Binary doesn't have ANN option and so Brute Force method is used.
 
-            if args.feature == 1 or args.feature == 2:
+            if num_feature == 1 or num_feature == 2:
                 #                FLANN parameters
                 FLANN_INDEX_KDTREE = 1
                 index_params = dict(algorithm=FLANN_INDEX_KDTREE, trees=5)
@@ -218,7 +186,7 @@ def match_feature(imagepair):  # ,path_feature,path_output):
                     _convert_match_to_vector(valid_match), dtype=int)
 
             # For binary descriptors, using hamming distance
-            elif args.feature == 3 or args.feature == 4 or args.feature == 5 or args.feature == 6:
+            elif num_feature == 3 or num_feature == 4 or num_feature == 5 or num_feature == 6:
 
                 bf = cv2.BFMatcher(cv2.NORM_HAMMING, crossCheck=False)
 
@@ -261,7 +229,6 @@ def match_feature(imagepair):  # ,path_feature,path_output):
                            "Pair Images": _pair_logging,
                            "Features extraction method": method_feature,
                            "Threshold Ration": ratio,
-                           "Similarity matric": num2para(parameter),
                            "Time": _time_taken}
 
 #         Saving corresponding matches of master image to file

@@ -50,9 +50,8 @@ def load_features(path_output, method_feature):
 
 import networkx as nx
 from src import dataset
-from src.dataset import checkdir
+from src.dataset import track_lo
 from src import track, feature
-from src.matching import num2method
 import os
 import sys
 import yaml
@@ -60,80 +59,54 @@ import argparse
 import numpy as np
 import time
 
-#parser = argparse.ArgumentParser(description='See description below to see all available options')
-#
-# parser.add_argument('-i','--input',
-#                    help='Output directory feature extraction step.',
-#                    required=True)
-#
-# parser.add_argument('-o','--output',
-#                    help='Output directory where all the output will be stored. [Default] output folder in current directory',
-#                    default = './output/',
-#                    required=False)
-#
-# parser.add_argument('-f','--feature',type=int,
-#                    help='feature method that is used for matching'+
-#                    ' 1 -- SIFT ' +
-#                    ' 2 -- SURF'  +
-#                    ' 3 -- ORB'   +
-#                    ' 4 -- BRISK' +
-#                    ' 5 -- AKAZE' +
-#                    ' 6 -- STAR+ BRIEF'+
-#                    ' [Default] is SIFT',
-#                    default = 1,
-#                    required=False)
-#
-#args = parser.parse_args()
-#
-#path_input = args.input;
-#path_output = args.output;
-# method_feature = num2method(args.feature); # SIFT,SURF,ORB etc
+parser = argparse.ArgumentParser(description='See description below to see all available options')
 
-path_input = './output'
-path_output = '/home/indshine-2/Downloads/Dimension/Dimension/SFM/output'
-method_feature = 'sift'
+parser.add_argument('-i','--input',
+                    help='Input directory containing images.',
+                    required=True)
+
+parser.add_argument('-o','--output',
+                    help='Output directory where all the output will be stored. [Default] output folder in current directory',
+                    default = './output/',
+                    required=False)
+
+args = parser.parse_args()
+
+path_input = args.input;
+path_output = args.output;
+
 file_para = dataset.para_lo(path_output)
+para = yaml.safe_load(open(file_para))
 
-# Saving
-saving_matches = 'track'
+method_feature = para['feature_extractor']
 
-# Update path_output and output directories
-path_output = os.path.join(path_output, saving_matches)
-path_logging = os.path.join(path_output, 'logging')  # Individual file record
-path_report = os.path.join(path_output, 'report')  # Summary of whole file
-# Any data to be saved
-path_data = os.path.join(path_output, 'data', method_feature)
+files = track_lo(path_output,method_feature)
+path_data = files[1]
+#file_track, path_data, path_report, path_logging, path_output
 
-# Checking if path  exists, otherwise will be created
-checkdir(path_output)
-checkdir(path_logging)
-checkdir(path_report)
-checkdir(path_data)
 
-file_exif, file_imagepair, file_camera_model, _, _, _ = dataset.exif_lo(
-    path_input)
-
+exif_files = dataset.exif_lo(path_output)
 
 # Cheching if exif.json and imagepair.json exists or not
-if os.path.isfile(file_exif):
+if os.path.isfile(exif_files[0]):
     print('exif.json found')
 else:
     sys.exit(
         'No exif.json found. extract_feature.py command first before running matching_feature.py')
 
 # Checking if imagepair.json exist or not
-if os.path.isfile(file_imagepair):
+if os.path.isfile(exif_files[1]):
     print('imagepair.json found')
 else:
     sys.exit(
         'No imagepair.json found. Run exif.py command first before running matching_feature.py')
 
 
-exif = yaml.safe_load(open(file_exif))
-imagepair = yaml.safe_load(open(file_imagepair))
-parameter = yaml.safe_load(open(file_para))
-
+exif = yaml.safe_load(open(exif_files[0]))
+imagepair = yaml.safe_load(open(exif_files[1]))
 no_im = len(exif)
+
+
 #G = nx.Graph()
 
 # Adding nodes
@@ -156,20 +129,21 @@ no_im = len(exif)
 
 print('loading features ...')
 start_time = time.time()
-_feature, _nfeature, color = load_features(path_input, method_feature)
+_feature, _nfeature, color = load_features(path_output, method_feature)
 
 end_time = time.time()-start_time
 print('features loaded in %s secs' % (end_time))
 
 print('loading matches ...')
-match = load_match(path_input, method_feature)
+match = load_match(path_output, method_feature)
 print('matches loaded')
 
 # Minimum track length
-min_track_len = parameter['min_track_length']
+min_track_len = para['min_track_length']
 
 # Input given is normalised feature
 track_graph, _, tracks, uf = track.create_tracks_graph(
     _nfeature, color, match, min_track_len)
 track.save_track_graph(track_graph, path_data)
+
 #  str(image), index(track), feature_id, x, y, r, g, b
