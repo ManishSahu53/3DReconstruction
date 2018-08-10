@@ -99,9 +99,9 @@ def _read_ground_control_points_list_line(line, projection, reference_lla, exif)
         lon, lat = easting, northing
     x, y, z = geo.topocentric_from_lla(
         lat, lon, alt,
-        reference_lla['latitude'],
-        reference_lla['longitude'],
-        reference_lla['altitude'])
+        reference_lla['lat'],
+        reference_lla['long'],
+        reference_lla['ele'])
 
     # Convert 2D coordinates
     d = exif[shot_id]

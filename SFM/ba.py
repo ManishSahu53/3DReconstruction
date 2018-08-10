@@ -1,4 +1,35 @@
 """ Incremental bundle adjustment """
+
+def load_match(path_output, method_feature, remaining_images):
+    path_match = dataset.match_lo(path_output, method_feature)
+    match = {}
+    for root, dirs, files in os.walk(path_match[0]):
+        if len(files) == 0:
+            print('No files found in "%s" directory' % (path_match[0]))
+            sys.exit('No files found')
+            break
+        for file_name in files:
+            if file_name.endswith(('.npy', '.Npy', '.NPY')):
+                count = 0
+                count_im = 0
+                im1_match = np.load(os.path.join(
+                    path_match[0], file_name)).item()
+                im1 = os.path.splitext(file_name)[0] + '.JPG'
+                intersect =  set.intersection(set([im1]),remaining_images)
+                # We want to only process uncalibrated images
+                if len(intersect) ==0:
+                    continue
+                for im2 in im1_match:
+                    intersect =  set.intersection(set([im2]),remaining_images)
+                    
+                    # dont want to match uncalibrated images with uncalibrated images
+                    if len(intersect) ==0:
+                        count_im = count_im + 1
+                        count = len(im1_match[im2]) + count
+                match[im1] =  count/count_im
+    return match
+
+
 from src import track
 from src import dataset
 from src import incremental_ba as iba
@@ -7,9 +38,11 @@ import os
 import sys
 import argparse
 from src.matching import num2method
+import numpy as np
+import time
 
-
-#path_input = './input'
+start_time = time.time()
+#path_input = '../test_dataset/Images'
 #path_output = './output'
 #method_feature = 'sift'
 
@@ -67,7 +100,6 @@ else:
 exif = yaml.safe_load(open(file[0]))
 imagepair = yaml.safe_load(open(file[1]))
 ref = yaml.safe_load(open(file_ref))
-para = yaml.safe_load(open(file_para))
 gcp = None
 
 # Creating camera class
@@ -122,10 +154,31 @@ for im1, im2 in pair:
 reconstruct = dataset.save_reconstruction(reconstructions, path_reconstruction[0])
 dataset.save_ply(reconstructions, path_reconstruction[0])
 
-#reconstruct_report = {}
-#num_uncalib = len(remaining_images)
-#total_im = len(images)
-#num_calib = total_im- num_uncalib
-#reproj_err = 
+# Extracting matches of uncalibrated images
+average_match = load_match(path_output,method_feature,remaining_images)
+end_time = time.time()
 
-dataset.tojson(rec_report,os.path.join(path_reconstruction[1],'reconstruction_report.json'))
+reconstruct_report = {}
+uncalibrated_report = {}
+reproj_error = []
+num_uncalibrated = len(remaining_images)
+total_image = len(images)
+num_calibrated = total_image- num_uncalibrated
+
+num_segment = len(reconstruct)
+for i in range(num_segment):
+    for j in reconstruct[i]['points'].keys():
+        reproj_error.append(reconstruct[i]['points'][j]['reprojection_error'])
+reproj_error = np.asarray(reproj_error)
+
+reconstruct_report['total_image'] = total_image
+reconstruct_report['num_uncalibrated'] = num_uncalibrated
+reconstruct_report['avg_reprojection_error'] = round(np.mean(reproj_error),3)
+reconstruct_report['max_reprojection_error'] = round(np.max(reproj_error),3)
+reconstruct_report['total_time (secs)'] = round(end_time-start_time,0)
+
+uncalibrated_report['average_match'] =  average_match
+
+dataset.tojson(reconstruct_report,os.path.join(path_reconstruction[1],'reconstruction_report.json'))
+dataset.tojson(rec_report,os.path.join(path_reconstruction[1],'technical_report.json'))
+dataset.tojson(uncalibrated_report,os.path.join(path_reconstruction[1],'uncalibrated_images.json'))

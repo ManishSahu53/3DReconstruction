@@ -74,6 +74,21 @@ def exif_lo(path_output):
     checkdir(path_data)
     return file_exif, file_imagepair, file_camera_model, path_data, path_logging, path_output
 
+def tgeoref_lo(path_output):
+    saving_folder = 'georef'
+    path_output = os.path.join(path_output, saving_folder)
+    path_logging = os.path.join(path_output, 'logging')
+    path_data = os.path.join(path_output, 'data')
+    file_coord_transf = os.path.join(path_data, 'coord_transformation.json')
+    file_image_coord = os.path.join(path_data, 'image_coord.json')
+    file_reconstruct_coord = os.path.join(path_data, 'reconstruct_coord_.json')
+    file_dense_coord = None
+    # Checking if path  exists, otherwise will be created
+    checkdir(path_output)
+    checkdir(path_logging)
+    checkdir(path_data)
+    return file_coord_transf, file_image_coord, file_reconstruct_coord, file_dense_coord, path_data, path_logging, path_output
+
 
 def para_lo(path_output):
     saving_folder = 'exif'
