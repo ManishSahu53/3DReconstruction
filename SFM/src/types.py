@@ -44,7 +44,8 @@ class Pose(object):
         return self.get_rotation_matrix().dot(point) + self.translation
 
     def transform_inverse(self, point):
-        """Transform a point from this pose to world coordinates."""
+        """Transform a point from this pose to world coordinates. Since
+        R in orthogonal matrix inv(R) = R.T"""
         return self.get_rotation_matrix().T.dot(point - self.translation)
 
     def transform_inverse_many(self, points):

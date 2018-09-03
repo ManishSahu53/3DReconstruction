@@ -1,4 +1,4 @@
-""" Incremental bundle adjustment """
+""" Global  bundle adjustment """
 
 def load_match(path_output, method_feature, remaining_images):
     path_match = dataset.match_lo(path_output, method_feature)
@@ -30,9 +30,11 @@ def load_match(path_output, method_feature, remaining_images):
     return match
 
 
+        
+        
 from src import track
 from src import dataset
-from src import incremental_ba as iba
+from src import global_ba as gba
 import yaml
 import os
 import sys
@@ -40,9 +42,13 @@ import argparse
 from src.matching import num2method
 import numpy as np
 import time
+from six import iteritems
+import matplotlib.pyplot as plt
+from scipy.optimize import least_squares
+
 
 start_time = time.time()
-#path_input = '../test_dataset/Images'
+#path_input = '../test_dataset/Images/'
 #path_output = './output'
 #method_feature = 'sift'
 
@@ -102,6 +108,10 @@ imagepair = yaml.safe_load(open(file[1]))
 ref = yaml.safe_load(open(file_ref))
 gcp = None
 
+_im = exif.keys()
+width  = exif[_im[0]]['width'] 
+height = exif[_im[0]]['height']
+
 # Creating camera class
 camera_model = dataset.load_camera_models(file[2])
 no_im = len(exif)
@@ -121,7 +131,7 @@ common_track = track.all_common_tracks(track_graph, tracks)
 
 #  Get good image pair
 processes = 16
-pair = iba.compute_image_pair(common_track, [exif, camera_model], para)
+pair = gba.compute_image_pair(common_track, [exif, camera_model], para)
 num_pair = len(pair)
 
 rec_report = {}
@@ -135,23 +145,61 @@ for im1, im2 in pair:
 
     if im1 in remaining_images and im2 in remaining_images:
         # Selectin common tracks between images
-        _tracks, p1, p2 = common_track[im1, im2]
+        tracks, p1, p2 = common_track[im1, im2]
         print('selecting pairs...')
-        reconstruction, rec_report['bootstrap'] = iba.bootstrap_reconstruction(
+        reconstruction, rec_report['bootstrap'] = gba.bootstrap_reconstruction(
             camera_model, exif, ref, track_graph, im1, im2, p1, p2, para)
         print('pairs selected...')
         if reconstruction:
             remaining_images.remove(im1)
             remaining_images.remove(im2)
             print('Growing reconstruction ...')
-            reconstruction, rec_report['grow'] = iba.grow_reconstruction(
+            reconstruction, rec_report['grow'] = gba.grow_reconstruction(
                 para, track_graph, reconstruction, remaining_images, gcp, exif, ref)
             print('Grow completed')
             reconstructions.append(reconstruction)
             reconstructions = sorted(reconstructions,
                                      key=lambda x: -len(x.shots))
+                                         
 reconstruct = dataset.save_reconstruction(reconstructions, path_reconstruction[0])
 dataset.save_ply(reconstructions, path_reconstruction[0])
+
+"""Simple BA"""
+point_3d, pt_color, point_2d, camera_index, point_index = gba.arr_param(reconstruct, track_graph, remaining_images)
+
+# R, T, f, cx, cy, k1, k2, k3, p1, p2
+camera_params = gba.cam_param(camera_index, reconstruct)
+
+
+n_cameras = camera_params.shape[0]
+n_points = point_3d.shape[0]
+
+n = 14 * n_cameras + 3 * n_points
+m = 2 * point_2d.shape[0]
+
+print("n_cameras: {}".format(n_cameras))
+print("n_points: {}".format(n_points))
+print("Total number of parameters: {}".format(n))
+print("Total number of residuals: {}".format(m))
+
+
+#%matplotlib inline
+x0 = np.hstack((camera_params.ravel(), point_3d.ravel()))
+
+f0 = gba.fun(x0, n_cameras, n_points, camera_index, point_index, point_2d, camera_model)
+
+plt.plot(f0)
+
+A = gba.bundle_adjustment_sparsity(n_cameras, n_points, camera_index, point_index)
+
+t0 = time.time()
+res = least_squares(gba.fun, x0, jac_sparsity=A, verbose=2, x_scale='jac', ftol=1e-4, method='trf', loss = 'soft_l1',
+                    args=( n_cameras, n_points, camera_index, point_index, point_2d, camera_model))
+t1 = time.time()
+
+print("Optimization took {0:.0f} seconds".format(t1 - t0))
+plt.plot(res.fun)
+
 
 # Extracting matches of uncalibrated images
 average_match = load_match(path_output,method_feature,remaining_images)
